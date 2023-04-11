@@ -189,14 +189,80 @@ This aggregate represents a given Patient's Medical Record.
 ```
 
 ## Provider
-- personal data
-- organization
+```json
+{
+  "id":,
+  "name":,
+  "gender":,
+  "address":,
+  "city":,
+  "state":,
+  "county":,
+  "zip": ,
+  "lat": ,
+  "lon": ,
+  "organization" : [
+    {
+      "id": ,
+    }
+  ]
+}
+```
+
+<!-- - personal data
+- organization -->
 
 
 ## Encounter
-- organization (maybe key?)
+
+```json
+{
+  "organization" : [
+    {
+      "id": ,
+    }
+  ],
+  "provider" : [
+    {
+      "id": ,
+    }
+  ],
+  "patient": [
+    {
+      "id": "569991d5-9e70-c072-d73d-dddaa4a8b8d7",
+      "birthdate": "1964-04-05",
+      "deathdate": null,
+      "ssn": "999-77-3348",
+      "drivers": "S99929752", // optional field
+      "passport": "X58771668X", // optional field
+      "prefix": "Mr.", // optional field
+      "firstname": "Marco Antonio",
+      "lastname": "Blanco",
+      // "suffix": not present (no suffix)
+      // "maidenname": not present (only for females)
+      "marital_status": "S", // optional
+      "race": "asian",
+      "ethnicity": "hispanic",
+      "gender": "M",
+      "birthplace": "Mexico City  Mexico City  MX",
+      "address": "617 Flatley Vista Suite 72",
+      "city": "Inglewood",
+      "state": "CA",
+      "county": "Los Angeles County",
+      "fips": 6037, // optional
+      "zip": 90302,
+      "lat": 33.914933842146,
+      "lon": -118.36223201007287,
+      "healthcare_expenses": 72047.54, // TODO remove?
+      "healthcare_coverage": 171647.76, // TODO remove?
+      "income": 92065,
+    }
+  ]
+}
+```
+<!-- - organization (maybe key?)
 - provider (maybe key?)
-- info patient
+- info patient -->
 
 
 
