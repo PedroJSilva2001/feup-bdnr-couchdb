@@ -45,7 +45,7 @@ def get_encounter_json_documents(datasets):
     patients = datasets["patients"]
     organizations = datasets["organizations"]
     providers = datasets["providers"]
-    payers = datasets["providers"]
+    payers = datasets["payers"]
 
     merged = pd.merge(encounters, patients, how="left", left_on="encounter_patient", right_on="patient_id")
     merged = pd.merge(merged, organizations, how="left", left_on="encounter_organization", right_on="organization_id")
