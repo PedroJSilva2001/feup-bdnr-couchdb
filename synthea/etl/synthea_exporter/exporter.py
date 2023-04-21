@@ -56,7 +56,6 @@ def get_patient_json_documents(datasets):
     patients_json = json.loads(patients.to_json(orient="records"))
 
     grouped_allergies = merge_datasets_1_n(patients, allergies, "patient_id", "allergy_patient")
-   
     grouped_careplans = merge_datasets_1_n(patients, careplans, "patient_id", "careplan_patient")
 #grouped_claims = merge_datasets_1_n(patients, claims, "patient_id", "careplan_patient")
     grouped_conditions = merge_datasets_1_n(patients, conditions, "patient_id", "condition_patient")
@@ -83,19 +82,68 @@ def get_patient_json_documents(datasets):
 
         strip_keys(patient_json, dataset_prefix("patients"))
     
-    return patient_json
+    return patients_json
 
 def get_encounter_json_documents(datasets):
-    encounters = datasets["encounters"]
     patients = datasets["patients"]
     organizations = datasets["organizations"]
     providers = datasets["providers"]
     payers = datasets["payers"]
+    allergies = datasets["allergies"]
+    careplans = datasets["careplans"]
+    claims = datasets["claims"]
+    conditions = datasets["conditions"]
+    devices = datasets["devices"]
+    encounters = datasets["encounters"]
+    imaging_studies = datasets["imaging_studies"]
+    immunizations = datasets["immunizations"]
+    medications = datasets["medications"]
+    observations = datasets["observations"]
+    payer_transitions = datasets["payer_transitions"]
+    procedures = datasets["procedures"]
+    supplies = datasets["supplies"]
 
-    merged = pd.merge(encounters, patients, how="left", left_on="encounter_patient", right_on="patient_id")
-    merged = pd.merge(merged, organizations, how="left", left_on="encounter_organization", right_on="organization_id")
-    merged = pd.merge(merged, providers, how="left", left_on="encounter_provider", right_on="provider_id")
-    merged = pd.merge(merged, payers, how="left", left_on="encounter_payer", right_on="payer_id")
+    merged = merge_datasets_1_1(encounters, patients, "encounter_patient", "patient_id")
+    merged = merge_datasets_1_1(merged, providers, "encounter_provider", "provider_id")
+    merged = merge_datasets_1_1(merged, organizations, "encounter_organization", "organization_id")
+    merged = merge_datasets_1_1(merged, payers, "encounter_payer", "payer_id")
+
+    encounters_json = json.loads(merged.to_json(orient="records"))
+
+    grouped_allergies = merge_datasets_1_n(encounters, allergies, "encounter_id", "allergy_encounter")
+    grouped_careplans = merge_datasets_1_n(encounters, careplans, "encounter_id", "careplan_encounter")
+#grouped_claims = merge_datasets_1_n(encounters, claims, "encounter_id", "careplan_encounter")
+    grouped_conditions = merge_datasets_1_n(encounters, conditions, "encounter_id", "condition_encounter")
+    grouped_devices = merge_datasets_1_n(encounters, devices, "encounter_id", "device_encounter")
+    grouped_imaging_studies = merge_datasets_1_n(encounters, imaging_studies, "encounter_id", "imaging_study_encounter")
+    grouped_immunizations = merge_datasets_1_n(encounters, immunizations, "encounter_id", "immunization_encounter")
+    grouped_medications = merge_datasets_1_n(encounters, medications, "encounter_id", "medication_encounter")
+    grouped_observations = merge_datasets_1_n(encounters, observations, "encounter_id", "observation_encounter")
+# payer transitions
+    grouped_procedures = merge_datasets_1_n(encounters, procedures, "encounter_id", "procedure_encounter")
+    grouped_supplies = merge_datasets_1_n(encounters, supplies, "encounter_id", "supply_encounter")
+
+    for encounter_json in encounters_json:
+        aggregate_single(encounter_json, "encounter_patient", "patient_")
+        aggregate_single(encounter_json, "encounter_organization", "organization_")
+        aggregate_single(encounter_json, "encounter_provider", "provider_")
+        aggregate_single(encounter_json, "encounter_payer", "payer_")
+
+        aggregate_multiple(encounter_json, "allergies", grouped_allergies, "encounter_id", "allergy_encounter", "encounter")
+        aggregate_multiple(encounter_json, "careplans", grouped_careplans, "encounter_id", "careplan_encounter", "encounter")
+        aggregate_multiple(encounter_json, "conditions", grouped_conditions, "encounter_id", "condition_encounter", "encounter")
+        aggregate_multiple(encounter_json, "devices", grouped_devices, "encounter_id", "device_encounter", "encounter")
+        aggregate_multiple(encounter_json, "imaging_studies", grouped_imaging_studies, "encounter_id", "imaging_study_encounter", "encounter")
+        aggregate_multiple(encounter_json, "immunizations", grouped_immunizations, "encounter_id", "immunization_encounter", "encounter")
+        aggregate_multiple(encounter_json, "medications", grouped_medications, "encounter_id", "medication_encounter", "encounter")
+        aggregate_multiple(encounter_json, "observations", grouped_observations, "encounter_id", "observation_encounter", "encounter")
+        aggregate_multiple(encounter_json, "procedures", grouped_procedures, "encounter_id", "procedure_encounter", "encounter")
+        aggregate_multiple(encounter_json, "supplies", grouped_supplies, "encounter_id", "supply_encounter", "encounter")
+
+        strip_keys(encounter_json, dataset_prefix("encounters"))
+    
+    return encounters_json
+
 
 
 def get_provider_json_documents(datasets):
@@ -366,5 +414,5 @@ if __name__ == "__main__":
     #get_claims_json_documents(datasets)
     #print(json.dumps(get_claims_json_documents(datasets)[0], indent=2))
     #print(get_provider_json_documents(datasets))
-    #print(get_encounter_json_documents(datasets))
-    print(json.dumps(get_patient_json_documents(datasets), indent=2))
+    print(json.dumps(get_encounter_json_documents(datasets)[0], indent=2))
+    #print(json.dumps(get_patient_json_documents(datasets), indent=2))
