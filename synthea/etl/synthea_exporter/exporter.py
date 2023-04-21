@@ -38,7 +38,52 @@ def read_datasets(datasets_path):
     return datasets
 
 def get_patient_json_documents(datasets):
-    pass
+    patients = datasets["patients"]
+    allergies = datasets["allergies"]
+    careplans = datasets["careplans"]
+    claims = datasets["claims"]
+    conditions = datasets["conditions"]
+    devices = datasets["devices"]
+    encounters = datasets["encounters"]
+    imaging_studies = datasets["imaging_studies"]
+    immunizations = datasets["immunizations"]
+    medications = datasets["medications"]
+    observations = datasets["observations"]
+    payer_transitions = datasets["payer_transitions"]
+    procedures = datasets["procedures"]
+    supplies = datasets["supplies"]
+
+    patients_json = json.loads(patients.to_json(orient="records"))
+
+    grouped_allergies = merge_datasets_1_n(patients, allergies, "patient_id", "allergy_patient")
+   
+    grouped_careplans = merge_datasets_1_n(patients, careplans, "patient_id", "careplan_patient")
+#grouped_claims = merge_datasets_1_n(patients, claims, "patient_id", "careplan_patient")
+    grouped_conditions = merge_datasets_1_n(patients, conditions, "patient_id", "condition_patient")
+    grouped_devices = merge_datasets_1_n(patients, devices, "patient_id", "device_patient")
+    grouped_imaging_studies = merge_datasets_1_n(patients, imaging_studies, "patient_id", "imaging_study_patient")
+    grouped_immunizations = merge_datasets_1_n(patients, immunizations, "patient_id", "immunization_patient")
+    grouped_medications = merge_datasets_1_n(patients, medications, "patient_id", "medication_patient")
+    grouped_observations = merge_datasets_1_n(patients, observations, "patient_id", "observation_patient")
+# payer transitions
+    grouped_procedures = merge_datasets_1_n(patients, procedures, "patient_id", "procedure_patient")
+    grouped_supplies = merge_datasets_1_n(patients, supplies, "patient_id", "supply_patient")
+
+    for patient_json in patients_json:
+        aggregate_multiple(patient_json, "allergies", grouped_allergies, "patient_id", "allergy_patient", "patient")
+        aggregate_multiple(patient_json, "careplans", grouped_careplans, "patient_id", "careplan_patient", "patient")
+        aggregate_multiple(patient_json, "conditions", grouped_conditions, "patient_id", "condition_patient", "patient")
+        aggregate_multiple(patient_json, "devices", grouped_devices, "patient_id", "device_patient", "patient")
+        aggregate_multiple(patient_json, "imaging_studies", grouped_imaging_studies, "patient_id", "imaging_study_patient", "patient")
+        aggregate_multiple(patient_json, "immunizations", grouped_immunizations, "patient_id", "immunization_patient", "patient")
+        aggregate_multiple(patient_json, "medications", grouped_medications, "patient_id", "medication_patient", "patient")
+        aggregate_multiple(patient_json, "observations", grouped_observations, "patient_id", "observation_patient", "patient")
+        aggregate_multiple(patient_json, "procedures", grouped_procedures, "patient_id", "procedure_patient", "patient")
+        aggregate_multiple(patient_json, "supplies", grouped_supplies, "patient_id", "supply_patient", "patient")
+
+        strip_keys(patient_json, dataset_prefix("patients"))
+    
+    return patient_json
 
 def get_encounter_json_documents(datasets):
     encounters = datasets["encounters"]
@@ -107,13 +152,13 @@ def get_claims_json_documents(datasets):
         drop_property(claim_transactions_json, "claim")
         claim_json["claim_transactions"] = claim_transactions_json
 
-        aggregate(claim_json, "claim_patient", "patient_")
-        aggregate(claim_json, "claim_appointment", "encounter_")
-        aggregate(claim_json, "claim_primary_patient_insurance", "primary_payer_")
-        aggregate(claim_json, "claim_secondary_patient_insurance", "secondary_payer_")
-        aggregate(claim_json, "claim_provider", "provider_")
-        aggregate(claim_json, "claim_referring_provider", "referring_provider_")
-        aggregate(claim_json, "claim_supervising_provider", "supervising_provider_")
+        aggregate_single(claim_json, "claim_patient", "patient_")
+        aggregate_single(claim_json, "claim_appointment", "encounter_")
+        aggregate_single(claim_json, "claim_primary_patient_insurance", "primary_payer_")
+        aggregate_single(claim_json, "claim_secondary_patient_insurance", "secondary_payer_")
+        aggregate_single(claim_json, "claim_provider", "provider_")
+        aggregate_single(claim_json, "claim_referring_provider", "referring_provider_")
+        aggregate_single(claim_json, "claim_supervising_provider", "supervising_provider_")
 
         strip_keys(claim_json, dataset_prefix("claims"))
 
@@ -252,7 +297,7 @@ def drop_property(jsons, property):
     for json in jsons:
         del json[property]
 
-def aggregate(json, aggregate_key, prefix, suffix=None):
+def aggregate_single(json, aggregate_key, prefix, suffix=None):
     json[aggregate_key] = {}
     keys = list(json.keys())
 
@@ -285,6 +330,24 @@ def merge_datasets_1_1(dataset1, dataset2, left_on, right_on, prefix=None):
 
     return merged
 
+def merge_datasets_1_n(dataset1, dataset2, left_on, right_on):
+    merged = pd.merge(dataset1, dataset2, how="outer", left_on=left_on, right_on=right_on)
+
+    grouped_jsons = json.loads(merged.groupby(left_on).apply(
+        lambda x: x[dataset2.columns].to_dict(orient="records")
+    ).to_json())
+
+    return grouped_jsons
+
+def drop_na(jsons, key_id):
+    return [json for json in jsons if json[key_id] != None]
+
+def aggregate_multiple(json, aggregate_key, grouped_jsons, json_id, aggregated_jsons_key_id, dropped_property):
+    aggregated_jsons = drop_na(grouped_jsons[json[json_id]], aggregated_jsons_key_id)
+    drop_prefix(aggregated_jsons, dataset_prefix(aggregate_key))
+    drop_property(aggregated_jsons, dropped_property)
+    json[aggregate_key] = aggregated_jsons
+
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         print("wrong number of parameters\n")
@@ -301,7 +364,7 @@ if __name__ == "__main__":
     
     drop_and_rename_columns(datasets)
     #get_claims_json_documents(datasets)
-    print(json.dumps(get_claims_json_documents(datasets)[0], indent=2))
+    #print(json.dumps(get_claims_json_documents(datasets)[0], indent=2))
     #print(get_provider_json_documents(datasets))
     #print(get_encounter_json_documents(datasets))
-    #print(get_claims_json_documents(datasets))
+    print(json.dumps(get_patient_json_documents(datasets), indent=2))
