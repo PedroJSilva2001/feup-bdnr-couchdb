@@ -153,7 +153,7 @@ def get_provider_json_documents(datasets):
     providers_json = json.loads(merged.to_json(orient="records"))
 
     for provider_json in providers_json:
-        aggregate_single(provider_json, "provider_organization", "organization_")
+        aggregate_single(provider_json, "provider_organization", "organization_id", "organization_")
 
         strip_keys(provider_json, dataset_prefix("providers"))
 
