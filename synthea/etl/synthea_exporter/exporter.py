@@ -341,6 +341,7 @@ def aggregate_single(json, aggregate_key, aggregated_json_key_id, prefix, suffix
             continue
 
         if key == aggregated_json_key_id and json[aggregated_json_key_id] == None:
+            json[aggregate_key] = None
             return
 
         value = json.pop(key)
