@@ -124,10 +124,10 @@ def get_encounter_json_documents(datasets):
     grouped_supplies = merge_datasets_1_n(encounters, supplies, "encounter_id", "supply_encounter")
 
     for encounter_json in encounters_json:
-        aggregate_single(encounter_json, "encounter_patient", "patient_")
-        aggregate_single(encounter_json, "encounter_organization", "organization_")
-        aggregate_single(encounter_json, "encounter_provider", "provider_")
-        aggregate_single(encounter_json, "encounter_payer", "payer_")
+        aggregate_single(encounter_json, "encounter_patient", "patient_id", "patient_")
+        aggregate_single(encounter_json, "encounter_organization", "organization_id", "organization_")
+        aggregate_single(encounter_json, "encounter_provider", "provider_id","provider_")
+        aggregate_single(encounter_json, "encounter_payer", "payer_id", "payer_")
 
         aggregate_multiple(encounter_json, "allergies", grouped_allergies, "encounter_id", "allergy_encounter", "encounter")
         aggregate_multiple(encounter_json, "careplans", grouped_careplans, "encounter_id", "careplan_encounter", "encounter")
@@ -144,28 +144,19 @@ def get_encounter_json_documents(datasets):
     
     return encounters_json
 
-
-
 def get_provider_json_documents(datasets):
     providers = datasets["providers"]
     organizations = datasets["organizations"]
 
-    merged = pd.merge(providers, organizations, how="left", left_on="provider_organization", right_on="organization_id")
+    merged = merge_datasets_1_1(providers, organizations, "provider_organization", "organization_id")
 
     providers_json = json.loads(merged.to_json(orient="records"))
 
-    for record in providers_json:
-        record["provider_organization"] = {
-            "id": record.pop("organization_id"),
-            "name": record.pop("organization_name"),
-            "address": record.pop("organization_address"),
-            "city": record.pop("organization_city"),
-            "state": record.pop("organization_state"),
-            "zip": record.pop("organization_zip"),
-            "lat": record.pop("organization_lat"),
-            "lon": record.pop("organization_lon"),
-            "phone": record.pop("organization_phone")
-        }
+    for provider_json in providers_json:
+        aggregate_single(provider_json, "provider_organization", "organization_")
+
+        strip_keys(provider_json, dataset_prefix("providers"))
+
 
     return json.dumps(providers_json, indent=2)
 
@@ -178,12 +169,6 @@ def get_claims_json_documents(datasets):
     organizations = datasets["organizations"]
     encounters = datasets["encounters"]
 
-    merged = pd.merge(claims, claims_transactions, how="outer", left_on="claim_id", right_on="claims_transaction_claim")
-
-    grouped_claim_transactions = json.loads(merged.groupby("claim_id").apply(
-        lambda x: x[claims_transactions.columns].to_dict(orient="records")
-    ).to_json())
-
     merged = merge_datasets_1_1(claims, patients, "claim_patient", "patient_id")
     merged = merge_datasets_1_1(merged, encounters, "claim_appointment", "encounter_id")
     merged = merge_datasets_1_1(merged, payers, "claim_primary_patient_insurance", "payer_id", "primary_")
@@ -192,21 +177,20 @@ def get_claims_json_documents(datasets):
     merged = merge_datasets_1_1(merged, providers, "claim_referring_provider", "provider_id", "referring_")
     merged = merge_datasets_1_1(merged, providers, "claim_supervising_provider", "provider_id", "supervising_")
 
+    grouped_claim_transactions = merge_datasets_1_n(claims, claims_transactions, "claim_id", "claims_transaction_claim")
+
     claims_json = json.loads(merged.to_json(orient="records"))
 
     for claim_json in claims_json:
-        claim_transactions_json = grouped_claim_transactions[claim_json["claim_id"]]
-        drop_prefix(claim_transactions_json, dataset_prefix("claims_transactions"))
-        drop_property(claim_transactions_json, "claim")
-        claim_json["claim_transactions"] = claim_transactions_json
+        aggregate_single(claim_json, "claim_patient", "patient_id", "patient_")
+        aggregate_single(claim_json, "claim_appointment", "encounter_id", "encounter_")
+        aggregate_single(claim_json, "claim_primary_patient_insurance", "primary_payer_id", "primary_payer_")
+        aggregate_single(claim_json, "claim_secondary_patient_insurance", "secondary_payer_id", "secondary_payer_")
+        aggregate_single(claim_json, "claim_provider", "provider_id", "provider_")
+        aggregate_single(claim_json, "claim_referring_provider", "referring_provider_id", "referring_provider_")
+        aggregate_single(claim_json, "claim_supervising_provider", "supervising_provider_id", "supervising_provider_")
 
-        aggregate_single(claim_json, "claim_patient", "patient_")
-        aggregate_single(claim_json, "claim_appointment", "encounter_")
-        aggregate_single(claim_json, "claim_primary_patient_insurance", "primary_payer_")
-        aggregate_single(claim_json, "claim_secondary_patient_insurance", "secondary_payer_")
-        aggregate_single(claim_json, "claim_provider", "provider_")
-        aggregate_single(claim_json, "claim_referring_provider", "referring_provider_")
-        aggregate_single(claim_json, "claim_supervising_provider", "supervising_provider_")
+        aggregate_multiple(claim_json, "claims_transactions", grouped_claim_transactions, "claim_id", "claims_transaction_claim", "claim")
 
         strip_keys(claim_json, dataset_prefix("claims"))
 
@@ -345,7 +329,7 @@ def drop_property(jsons, property):
     for json in jsons:
         del json[property]
 
-def aggregate_single(json, aggregate_key, prefix, suffix=None):
+def aggregate_single(json, aggregate_key, aggregated_json_key_id, prefix, suffix=None):
     json[aggregate_key] = {}
     keys = list(json.keys())
 
@@ -355,6 +339,9 @@ def aggregate_single(json, aggregate_key, prefix, suffix=None):
 
         if suffix != None and (not key.endswith(suffix)):
             continue
+
+        if key == aggregated_json_key_id and json[aggregated_json_key_id] == None:
+            return
 
         value = json.pop(key)
         if suffix != None:
@@ -412,7 +399,7 @@ if __name__ == "__main__":
     
     drop_and_rename_columns(datasets)
     #get_claims_json_documents(datasets)
-    #print(json.dumps(get_claims_json_documents(datasets)[0], indent=2))
+    print(json.dumps(get_claims_json_documents(datasets)[0], indent=2))
     #print(get_provider_json_documents(datasets))
-    print(json.dumps(get_encounter_json_documents(datasets)[0], indent=2))
+    #print(json.dumps(get_encounter_json_documents(datasets)[0], indent=2))
     #print(json.dumps(get_patient_json_documents(datasets), indent=2))
