@@ -330,30 +330,13 @@ def drop_property(jsons, property):
         del json[property]
 
 def aggregate_single(json, aggregate_key, aggregated_json_key_id, prefix, suffix=None):
-    json[aggregate_key] = {}
-    keys = list(json.keys())
+    aggregated_json = { key: json.pop(key) for key in list(json.keys()) if key.startswith(prefix) }
 
-    for key in keys:
-        if not key.startswith(prefix):
-            continue
-
-        if suffix != None and (not key.endswith(suffix)):
-            continue
-
-        if key == aggregated_json_key_id and json[aggregated_json_key_id] == None:
-            json[aggregate_key] = None
-            return
-
-        value = json.pop(key)
-        if suffix != None:
-            stripped_key = str(key.replace(suffix, "", 1))
-        else:
-            stripped_key = str(key)
-
-        stripped_key = stripped_key.replace(prefix, "", 1)
-        json[aggregate_key][stripped_key] = value
-
-    strip_keys(json[aggregate_key], prefix, suffix)
+    if aggregated_json[aggregated_json_key_id] == None:
+        json[aggregate_key] = None
+    else:
+        strip_keys(aggregated_json, prefix, suffix)
+        json[aggregate_key] = aggregated_json
 
 def merge_datasets_1_1(dataset1, dataset2, left_on, right_on, prefix=None):
     if prefix != None:
