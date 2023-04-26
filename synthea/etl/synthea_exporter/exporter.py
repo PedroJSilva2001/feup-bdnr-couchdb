@@ -1,7 +1,11 @@
 import json
+import os
 import sys
 import numpy as np
 import pandas as pd
+from time import time
+from datetime import datetime
+from copy import deepcopy
 
 dataset_names = [
     "allergies",
@@ -37,19 +41,16 @@ def read_datasets(datasets_path):
     
     return datasets
 
-def get_patient_json_documents(datasets):
+def get_patient_json_documents(datasets, claim_jsons, claim_transition_jsons, encounter_jsons):
     patients = datasets["patients"]
     allergies = datasets["allergies"]
     careplans = datasets["careplans"]
-    claims = datasets["claims"]
     conditions = datasets["conditions"]
     devices = datasets["devices"]
-    encounters = datasets["encounters"]
     imaging_studies = datasets["imaging_studies"]
     immunizations = datasets["immunizations"]
     medications = datasets["medications"]
     observations = datasets["observations"]
-    payer_transitions = datasets["payer_transitions"]
     procedures = datasets["procedures"]
     supplies = datasets["supplies"]
 
@@ -57,16 +58,18 @@ def get_patient_json_documents(datasets):
 
     grouped_allergies = merge_datasets_1_n(patients, allergies, "patient_id", "allergy_patient")
     grouped_careplans = merge_datasets_1_n(patients, careplans, "patient_id", "careplan_patient")
-#grouped_claims = merge_datasets_1_n(patients, claims, "patient_id", "careplan_patient")
     grouped_conditions = merge_datasets_1_n(patients, conditions, "patient_id", "condition_patient")
     grouped_devices = merge_datasets_1_n(patients, devices, "patient_id", "device_patient")
     grouped_imaging_studies = merge_datasets_1_n(patients, imaging_studies, "patient_id", "imaging_study_patient")
     grouped_immunizations = merge_datasets_1_n(patients, immunizations, "patient_id", "immunization_patient")
     grouped_medications = merge_datasets_1_n(patients, medications, "patient_id", "medication_patient")
     grouped_observations = merge_datasets_1_n(patients, observations, "patient_id", "observation_patient")
-# payer transitions
     grouped_procedures = merge_datasets_1_n(patients, procedures, "patient_id", "procedure_patient")
     grouped_supplies = merge_datasets_1_n(patients, supplies, "patient_id", "supply_patient")
+
+    grouped_payer_transition_jsons = group_jsons(claim_transition_jsons, "patient")
+    grouped_claim_jsons = group_jsons(claim_jsons, "patient")
+    grouped_encounter_jsons = group_jsons(encounter_jsons, "patient")
 
     for patient_json in patients_json:
         aggregate_multiple(patient_json, "allergies", grouped_allergies, "patient_id", "allergy_patient", "patient")
@@ -80,18 +83,27 @@ def get_patient_json_documents(datasets):
         aggregate_multiple(patient_json, "procedures", grouped_procedures, "patient_id", "procedure_patient", "patient")
         aggregate_multiple(patient_json, "supplies", grouped_supplies, "patient_id", "supply_patient", "patient")
 
+        patient_json["payer_transitions"] = grouped_payer_transition_jsons[patient_json["patient_id"]]
+        patient_json["claims"] = grouped_claim_jsons[patient_json["patient_id"]]
+        patient_json["encounters"] = grouped_encounter_jsons[patient_json["patient_id"]]
+
         strip_keys(patient_json, dataset_prefix("patients"))
+
+        for prop in ["allergies", "careplans", "conditions", "devices",
+                     "imaging_studies", "immunizations", "medications", 
+                     "observations","procedures", "supplies", "encounters", 
+                     "payer_transitions", "claims"]:
+            patient_json[prop] = patient_json.pop(prop)
     
     return patients_json
 
-def get_encounter_json_documents(datasets):
+def get_encounter_json_documents(datasets, claim_jsons):
     patients = datasets["patients"]
     organizations = datasets["organizations"]
     providers = datasets["providers"]
     payers = datasets["payers"]
     allergies = datasets["allergies"]
     careplans = datasets["careplans"]
-    claims = datasets["claims"]
     conditions = datasets["conditions"]
     devices = datasets["devices"]
     encounters = datasets["encounters"]
@@ -99,7 +111,6 @@ def get_encounter_json_documents(datasets):
     immunizations = datasets["immunizations"]
     medications = datasets["medications"]
     observations = datasets["observations"]
-    payer_transitions = datasets["payer_transitions"]
     procedures = datasets["procedures"]
     supplies = datasets["supplies"]
 
@@ -112,16 +123,16 @@ def get_encounter_json_documents(datasets):
 
     grouped_allergies = merge_datasets_1_n(encounters, allergies, "encounter_id", "allergy_encounter")
     grouped_careplans = merge_datasets_1_n(encounters, careplans, "encounter_id", "careplan_encounter")
-#grouped_claims = merge_datasets_1_n(encounters, claims, "encounter_id", "careplan_encounter")
     grouped_conditions = merge_datasets_1_n(encounters, conditions, "encounter_id", "condition_encounter")
     grouped_devices = merge_datasets_1_n(encounters, devices, "encounter_id", "device_encounter")
     grouped_imaging_studies = merge_datasets_1_n(encounters, imaging_studies, "encounter_id", "imaging_study_encounter")
     grouped_immunizations = merge_datasets_1_n(encounters, immunizations, "encounter_id", "immunization_encounter")
     grouped_medications = merge_datasets_1_n(encounters, medications, "encounter_id", "medication_encounter")
     grouped_observations = merge_datasets_1_n(encounters, observations, "encounter_id", "observation_encounter")
-# payer transitions
     grouped_procedures = merge_datasets_1_n(encounters, procedures, "encounter_id", "procedure_encounter")
     grouped_supplies = merge_datasets_1_n(encounters, supplies, "encounter_id", "supply_encounter")
+
+    grouped_claim_jsons = group_jsons(claim_jsons, "appointment")
 
     for encounter_json in encounters_json:
         aggregate_single(encounter_json, "encounter_patient", "patient_id", "patient_")
@@ -140,7 +151,44 @@ def get_encounter_json_documents(datasets):
         aggregate_multiple(encounter_json, "procedures", grouped_procedures, "encounter_id", "procedure_encounter", "encounter")
         aggregate_multiple(encounter_json, "supplies", grouped_supplies, "encounter_id", "supply_encounter", "encounter")
 
+        encounter_json["claims"] = grouped_claim_jsons[encounter_json["encounter_id"]]
+
         strip_keys(encounter_json, dataset_prefix("encounters"))
+
+        for prop in ["patient", "organization", "provider", "payer",
+                     "allergies", "careplans", "conditions", "devices",
+                     "imaging_studies", "immunizations", "medications", 
+                     "observations","procedures", "supplies", 
+                     "claims"]:
+            encounter_json[prop] = encounter_json.pop(prop)
+    
+    return encounters_json
+
+def get_simple_encounter_json_documents(datasets):
+    encounters = datasets["encounters"]
+    organizations = datasets["organizations"]
+    providers = datasets["providers"]
+
+    merged = merge_datasets_1_1(encounters, providers, "encounter_provider", "provider_id")
+    merged = merge_datasets_1_1(merged, organizations, "encounter_organization", "organization_id")
+
+    encounters_json = json.loads(merged.to_json(orient="records"))
+
+    for encounter_json in encounters_json:
+        aggregate_single(encounter_json, "encounter_organization", "organization_id", "organization_")
+        aggregate_single(encounter_json, "encounter_provider", "provider_id","provider_")
+
+        strip_keys(encounter_json, dataset_prefix("encounters"))
+
+        del encounter_json["provider"]["address"]
+        del encounter_json["provider"]["city"]
+        del encounter_json["provider"]["state"]
+        del encounter_json["provider"]["zip"]
+        del encounter_json["provider"]["lat"]
+        del encounter_json["provider"]["lon"]
+
+        for prop in ["provider", "organization"]:
+            encounter_json[prop] = encounter_json.pop(prop)
     
     return encounters_json
 
@@ -150,28 +198,24 @@ def get_provider_json_documents(datasets):
 
     merged = merge_datasets_1_1(providers, organizations, "provider_organization", "organization_id")
 
-    providers_json = json.loads(merged.to_json(orient="records"))
+    provider_jsons = json.loads(merged.to_json(orient="records"))
 
-    for provider_json in providers_json:
+    for provider_json in provider_jsons:
         aggregate_single(provider_json, "provider_organization", "organization_id", "organization_")
 
         strip_keys(provider_json, dataset_prefix("providers"))
 
+        provider_json["organization"] = provider_json.pop("organization")
 
-    return json.dumps(providers_json, indent=2)
+    return provider_jsons
 
-def get_claims_json_documents(datasets):
+def get_claim_json_documents(datasets):
     claims = datasets["claims"]
     claims_transactions = datasets["claims_transactions"]
-    patients = datasets["patients"]
     payers = datasets["payers"]
     providers = datasets["providers"]
-    organizations = datasets["organizations"]
-    encounters = datasets["encounters"]
 
-    merged = merge_datasets_1_1(claims, patients, "claim_patient", "patient_id")
-    merged = merge_datasets_1_1(merged, encounters, "claim_appointment", "encounter_id")
-    merged = merge_datasets_1_1(merged, payers, "claim_primary_patient_insurance", "payer_id", "primary_")
+    merged = merge_datasets_1_1(claims, payers, "claim_primary_patient_insurance", "payer_id", "primary_")
     merged = merge_datasets_1_1(merged, payers, "claim_secondary_patient_insurance", "payer_id", "secondary_")
     merged = merge_datasets_1_1(merged, providers, "claim_provider", "provider_id")
     merged = merge_datasets_1_1(merged, providers, "claim_referring_provider", "provider_id", "referring_")
@@ -182,8 +226,6 @@ def get_claims_json_documents(datasets):
     claims_json = json.loads(merged.to_json(orient="records"))
 
     for claim_json in claims_json:
-        aggregate_single(claim_json, "claim_patient", "patient_id", "patient_")
-        aggregate_single(claim_json, "claim_appointment", "encounter_id", "encounter_")
         aggregate_single(claim_json, "claim_primary_patient_insurance", "primary_payer_id", "primary_payer_")
         aggregate_single(claim_json, "claim_secondary_patient_insurance", "secondary_payer_id", "secondary_payer_")
         aggregate_single(claim_json, "claim_provider", "provider_id", "provider_")
@@ -191,19 +233,87 @@ def get_claims_json_documents(datasets):
         aggregate_single(claim_json, "claim_supervising_provider", "supervising_provider_id", "supervising_provider_")
 
         aggregate_multiple(claim_json, "claims_transactions", grouped_claim_transactions, "claim_id", "claims_transaction_claim", "claim")
-
+        aggregate_properties(claim_json, "claim_diagnoses", ["claim_diagnosis1", "claim_diagnosis2", "claim_diagnosis3", "claim_diagnosis4",
+                              "claim_diagnosis5", "claim_diagnosis6", "claim_diagnosis7", "claim_diagnosis8"])
+        
+        for claim_transaction_json in claim_json["claims_transactions"]:
+            aggregate_properties(claim_transaction_json, "diagnoses_ref", ["diagnosis_ref1", "diagnosis_ref2", "diagnosis_ref3", "diagnosis_ref4"])
+        
         strip_keys(claim_json, dataset_prefix("claims"))
 
+        claim_json["claim_transactions"] = claim_json.pop("claims_transactions")
+
+        for prop in ["primary_patient_insurance", "secondary_patient_insurance",
+                     "provider", "referring_provider", "supervising_provider",
+                     "claim_transactions"]:
+            claim_json[prop] = claim_json.pop(prop)
+
     return claims_json
+
+def get_payer_transition_json_documents(datasets):
+    payer_transitions = datasets["payer_transitions"]
+    payers = datasets["payers"]
+  
+    merged = merge_datasets_1_1(payer_transitions, payers, "payer_transition_primary_payer", "payer_id", "primary_")
+    merged = merge_datasets_1_1(merged, payers, "payer_transition_secondary_payer", "payer_id", "secondary_")
+    payer_transitions_json = json.loads(merged.to_json(orient="records"))
+
+    for payer_transition_json in payer_transitions_json:
+        aggregate_single(payer_transition_json, "payer_transition_primary_payer", "primary_payer_id", "primary_payer_")
+        aggregate_single(payer_transition_json, "payer_transition_secondary_payer", "secondary_payer_id", "secondary_payer_")
+
+        strip_keys(payer_transition_json, dataset_prefix("payer_transitions"))
+
+    return payer_transitions_json
+
+def export_output(output_path, patient_documents, encounter_documents, provider_documents):
+    timestamp = time()
+    timestamp_str = datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)       
+
+    batches_path = os.path.normpath(timestamp_str + "_" + patient_documents[0]["state"])
+    batches_filepath = os.path.join(output_path, batches_path)
+    new_batches_file_filepath = os.path.join(output_path, "batches.txt")
+
+    batches_patients_filepath = os.path.join(batches_filepath, "patients")
+    batches_encounters_filepath = os.path.join(batches_filepath, "encounters")
+    batches_providers_filepath = os.path.join(batches_filepath, "providers")
     
-def export_output(output_path, patients_dataset, encounters_dataset, providers_dataset):
-    pass
+    os.makedirs(batches_patients_filepath)
+    os.makedirs(batches_encounters_filepath)
+    os.makedirs(batches_providers_filepath)
+
+    for patient in patient_documents:
+        patient_filepath = os.path.join(batches_patients_filepath, patient["id"]+ ".json")
+        with open(patient_filepath, 'w') as f:
+            f.write(json.dumps(patient, indent=2))
+
+    for encounter in encounter_documents:
+        encounter_filepath = os.path.join(batches_encounters_filepath, encounter["id"]+ ".json")
+        with open(encounter_filepath, 'w') as f:
+            f.write(json.dumps(encounter, indent=2))
+
+    for provider in provider_documents:
+        provider_filepath = os.path.join(batches_providers_filepath, provider["id"] + ".json")
+        with open(provider_filepath, 'w') as f:
+            f.write(json.dumps(provider, indent=2))
+
+
+    #if not os.path.exists(new_batches_file_filepath):
+    with open(new_batches_file_filepath, "a") as f:
+        f.write(timestamp_str + " " + patient_documents[0]["state"])
 
 def drop_and_rename_columns(datasets):
     # Remove unneeded columns
 
+    #datasets["claims"].drop(["PATIENTID"], axis=1, inplace=True)
+
     datasets["claims_transactions"].drop(["PLACEOFSERVICE", "APPOINTMENTID", "PATIENTID", 
-                                          "PROVIDERID","SUPERVISINGPROVIDERID"], axis=1, inplace=True)
+                                          "PROVIDERID","SUPERVISINGPROVIDERID",
+                                          "PATIENTINSURANCEID", "LINENOTE", # insurance id incorrect and linenot unused
+                                          "MODIFIER1", "MODIFIER2"], axis=1, inplace=True) # Modifiers unused
 
     datasets["organizations"].drop(["REVENUE", "UTILIZATION"], axis=1, inplace=True)
 
@@ -263,8 +373,8 @@ def drop_and_rename_columns(datasets):
         "UNITAMOUNT": "UNIT_AMOUNT",
         "TRANSFEROUTID": "TRANSFER_OUT_ID",
         "TRANSFERTYPE": "TRANSFER_TYPE",
-        "LINENOTE": "LINE_NOTE",
-        "PATIENTINSURANCEID": "PATIENT_INSURANCE",
+        #"LINENOTE": "LINE_NOTE",
+        #"PATIENTINSURANCEID": "PATIENT_INSURANCE",
         "FEESCHEDULEID": "FEE_SCHEDULE_ID",
     }, inplace=True)
 
@@ -282,6 +392,7 @@ def drop_and_rename_columns(datasets):
 
     datasets["payer_transitions"].rename(columns={
         "MEMBERID": "MEMBER_ID",
+        "PAYER": "PRIMARY_PAYER",
     }, inplace=True)
 
     datasets["procedures"].rename(columns={
@@ -298,6 +409,15 @@ def drop_and_rename_columns(datasets):
     
     datasets["claims"]["claim_secondary_patient_insurance"].replace(to_replace=0, value=None, inplace=True)
     datasets["claims"]["claim_referring_provider"].replace(to_replace=np.nan, value=None, inplace=True)
+    datasets["payer_transitions"]["payer_transition_secondary_payer"].replace(to_replace=np.nan, value=None, inplace=True)
+
+    for dataset_name in dataset_names:
+        dataset = datasets[dataset_name]
+        prefix = dataset_prefix(dataset_name)
+        for column in dataset.columns:
+            if column == prefix + "reason_code":
+                dataset[column] = dataset[column].fillna(-1)
+                dataset[column] = dataset[column].astype(int)
 
 def dataset_prefix(dataset_name):
     return (dataset_name[:-3] + "y" if dataset_name.endswith("ies") else dataset_name[:-1]) + "_"
@@ -367,6 +487,27 @@ def aggregate_multiple(json, aggregate_key, grouped_jsons, json_id, aggregated_j
     drop_property(aggregated_jsons, dropped_property)
     json[aggregate_key] = aggregated_jsons
 
+def aggregate_properties(json, aggregate_key, keys):
+    json[aggregate_key] = []
+    for key in keys:
+        value = json.pop(key)
+        if value != None:
+            json[aggregate_key].append(value)
+
+def group_jsons(jsons, merged_json_key_id):
+    grouped_jsons = {}
+
+    for json in jsons:
+        id = json[merged_json_key_id]
+        json_copy = deepcopy(json)
+        del json_copy[merged_json_key_id]
+        if id in grouped_jsons:
+            grouped_jsons[id].append(json_copy)
+        else:
+            grouped_jsons[id] = [json_copy]
+    return grouped_jsons
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         print("wrong number of parameters\n")
@@ -382,8 +523,13 @@ if __name__ == "__main__":
         print("Couldn't load datasets")
     
     drop_and_rename_columns(datasets)
-    #get_claims_json_documents(datasets)
-    print(json.dumps(get_claims_json_documents(datasets)[0], indent=2))
-    #print(get_provider_json_documents(datasets))
-    #print(json.dumps(get_encounter_json_documents(datasets)[0], indent=2))
-    #print(json.dumps(get_patient_json_documents(datasets), indent=2))
+
+    payer_transition_jsons = get_payer_transition_json_documents(datasets)
+    claim_jsons = get_claim_json_documents(datasets)
+    encounter_jsons = get_encounter_json_documents(datasets, claim_jsons)
+    encounter_simple_jsons = get_simple_encounter_json_documents(datasets)
+
+    patient_jsons = get_patient_json_documents(datasets, claim_jsons, payer_transition_jsons, encounter_simple_jsons)
+    provider_jsons = get_provider_json_documents(datasets)
+
+    export_output(output_path, patient_jsons, encounter_jsons, provider_jsons)
