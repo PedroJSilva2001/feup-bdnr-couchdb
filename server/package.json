@@ -1,0 +1,22 @@
+{
+  "name": "healthtracks_server",
+  "version": "1.0.0",
+  "description": "The server for the Healthtracks platform",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./index.js",
+    "dev": "nodemon ./index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "debug": "~2.6.9",
+    "nodemon": "^2.0.22"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "express-validator": "^7.0.1",
+    "http-status-codes": "^2.2.0"
+  }
+}

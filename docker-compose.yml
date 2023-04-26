@@ -1,0 +1,40 @@
+version: '3'
+services:
+  couchserver:
+    image: couchdb
+    restart: always
+    ports:
+      - "5984:5984"
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=admin123
+    volumes:
+        - ./dbdata:/opt/couchdb/data
+  server-prod:
+    build: server
+    image: healthtracks-server-prod
+    container_name: healthtracks-server-prod
+    ports:
+     - "8888:80"
+    env_file:
+      - ./server/.env
+    restart: always
+    depends_on:
+      - couchserver
+    links:
+     - couchserver
+  server-dev:
+    build:
+      context: server
+      dockerfile: Dockerfile-dev
+    image: healthtracks-server-dev
+    container_name: healthtracks-server-dev
+    ports:
+     - "8888:80"
+    env_file:
+     - ./server/.env
+    restart: always
+    depends_on:
+      - couchserver
+    links:
+     - couchserver
