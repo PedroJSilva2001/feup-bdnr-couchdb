@@ -1,4 +1,4 @@
-FROM node:14-alpine
+FROM node:18-alpine
 
 WORKDIR /usr/app
 
@@ -11,6 +11,8 @@ RUN npm install -g nodemon
 COPY src/ src/
 
 COPY ./.env ./
+
+COPY datasets/ datasets/
 
 EXPOSE 80
 
