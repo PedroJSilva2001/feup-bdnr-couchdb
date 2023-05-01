@@ -6,7 +6,7 @@ const http = require("http");
 const app = express();
 
 const startServer = async () => {
-    loaders({ expressApp: app });
+    await loaders({ expressApp: app });
 
     app.set('port', config.port);
 

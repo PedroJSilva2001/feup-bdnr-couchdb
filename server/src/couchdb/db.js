@@ -1,10 +1,11 @@
-const nano = require("nano");
+class DB {
+    set(db) {
+        this.db = db;
+    }
 
-const config = require("../config/env.js");
+    get() {
+        return this.db;
+    }
+};
 
-const db = nano(
-    `http://${config.couchdb_user}:${config.couchdb_password}@${config.couchdb_host}:${config.couchdb_port}`
-).use("healthtracks");
-
-module.exports = db;
-
+module.exports = new DB();
