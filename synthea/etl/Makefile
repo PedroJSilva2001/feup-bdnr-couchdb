@@ -9,7 +9,7 @@ GENERATOR_JAR = ../synthea-with-dependencies.jar
 GENERATOR_CONFIG_PATH = ../synthea.properties
 
 # Number of patients to generate
-GENERATOR_BATCH_SIZE = 1
+GENERATOR_BATCH_SIZE = 30
 
 # Location
 GENERATOR_LOCATION = California
