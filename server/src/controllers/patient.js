@@ -24,8 +24,8 @@ module.exports.find = async (ssn) => {
 // Assumes the patient exists
 module.exports.findEncounters = async (ssn, start, end) => {
     const response = await db.get().view("patient-view-ddoc", "encounters", {
-        start_key: [ssn, ...start],
-        end_key: [ssn, ...end],
+        start_key: [ssn, null, ...start],
+        end_key: [ssn, {}, ...end],
         reduce: false
     });
 
@@ -37,16 +37,21 @@ module.exports.findEncounters = async (ssn, start, end) => {
 };
 
 // Assumes the patient exists
-module.exports.findEncounter = async (ssn, start, end) => {
+module.exports.findEncounter = async (ssn, encounterID) => {
+    console.log(encounterID)
     const response = await db.get().view("patient-view-ddoc", "encounters", {
-        start_key: [ssn, ...start],
-        end_key: [ssn, ...end],
+        start_key: [ssn, encounterID],
+        end_key: [ssn, encounterID, {}, {}, {}],
         reduce: false
     });
 
+    if (response.rows.length == 0) {
+        return {
+            encounter: null,
+        }
+    }
+    // Only an encounter should be returned
     return {
-        encounters: response.rows.map((row) => {
-            return row.value;
-        }),
+        encounter: response.rows[0],
     };
 };
