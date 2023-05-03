@@ -72,6 +72,7 @@ def get_patient_json_documents(datasets, claim_jsons, claim_transition_jsons, en
     grouped_encounter_jsons = group_jsons(encounter_jsons, "patient")
 
     for patient_json in patients_json:
+        patient_json["doc_type"] = "patient"
         aggregate_multiple(patient_json, "allergies", grouped_allergies, "patient_id", "allergy_patient", "patient")
         aggregate_multiple(patient_json, "careplans", grouped_careplans, "patient_id", "careplan_patient", "patient")
         aggregate_multiple(patient_json, "conditions", grouped_conditions, "patient_id", "condition_patient", "patient")
@@ -135,6 +136,7 @@ def get_encounter_json_documents(datasets, claim_jsons):
     grouped_claim_jsons = group_jsons(claim_jsons, "appointment")
 
     for encounter_json in encounters_json:
+        encounter_json["doc_type"] = "encounter"
         aggregate_single(encounter_json, "encounter_patient", "patient_id", "patient_")
         aggregate_single(encounter_json, "encounter_organization", "organization_id", "organization_")
         aggregate_single(encounter_json, "encounter_provider", "provider_id","provider_")
@@ -201,6 +203,8 @@ def get_provider_json_documents(datasets):
     provider_jsons = json.loads(merged.to_json(orient="records"))
 
     for provider_json in provider_jsons:
+        provider_json["doc_type"] = "provider"
+
         aggregate_single(provider_json, "provider_organization", "organization_id", "organization_")
 
         strip_keys(provider_json, dataset_prefix("providers"))
@@ -303,7 +307,7 @@ def export_output(output_path, patient_documents, encounter_documents, provider_
 
     #if not os.path.exists(new_batches_file_filepath):
     with open(new_batches_file_filepath, "a") as f:
-        f.write(timestamp_str + " " + patient_documents[0]["state"])
+        f.write(timestamp_str + " " + patient_documents[0]["state"] + "\n")
 
 def drop_and_rename_columns(datasets):
     # Remove unneeded columns

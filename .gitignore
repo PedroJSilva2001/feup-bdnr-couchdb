@@ -1,0 +1,5 @@
+synthea/synthea-with-dependencies.jar
+synthea/etl/datasets/
+synthea/etl/output/
+dbdata
+server/datasets

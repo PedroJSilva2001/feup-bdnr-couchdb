@@ -1,0 +1,46 @@
+version: '3'
+services:
+  couchserver:
+    image: couchdb
+    container_name: couchdb
+    restart: always
+    ports:
+      - "5984:5984"
+    volumes:
+        - ./dbdata:/opt/couchdb/data
+        - ./server/src/couchdb/local.ini:/opt/couchdb/etc/local.ini
+        #- ./dbdata/log:/opt/couchdb/log/couch.log
+    env_file:
+      - ./server/src/couchdb/couchdb.env
+  server-prod:
+    build: server
+    image: healthtracks-server-prod
+    container_name: healthtracks-server-prod
+    ports:
+     - "8888:80"
+    #volumes:
+    #  - ./server:/usr/app
+    env_file:
+      - ./server/.env
+    restart: always
+    depends_on:
+      - couchserver
+    links:
+     - couchserver
+  server-dev:
+    build:
+      context: server
+      dockerfile: Dockerfile-dev
+    image: healthtracks-server-dev
+    container_name: healthtracks-server-dev
+    ports:
+     - "8888:80"
+    volumes:
+      - ./server/src:/usr/app/src
+    env_file:
+     - ./server/.env
+    restart: always
+    depends_on:
+      - couchserver
+    links:
+     - couchserver
