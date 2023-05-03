@@ -44,3 +44,18 @@ services:
       - couchserver
     links:
      - couchserver
+  app:
+    build:
+      context: ./app
+    command: npm run dev -- --host
+    image: healthtracks-app
+    container_name: healthtracks-app
+    ports:
+     - "8080:8080"
+    volumes:
+      - ./app:/usr/app
+    restart: always
+    depends_on:
+      - server-dev
+    links:
+     - server-dev
