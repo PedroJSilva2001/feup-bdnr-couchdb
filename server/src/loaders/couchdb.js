@@ -5,6 +5,8 @@ const path = require('path');
 const config = require("../config/env.js");
 const db = require("../couchdb/db.js");
 const patientViewFunctions = require("../couchdb/ddoc-functions/views/patient.js");
+const providerViewFunctions = require("../couchdb/ddoc-functions/views/provider.js");
+const patientIndexes = require("../couchdb/ddoc-functions/indexes/patient.js");
 
 const server = nano(
     `http://${config.couchdb_user}:${config.couchdb_password}@${config.couchdb_host}:${config.couchdb_port}`
@@ -64,22 +66,10 @@ const loadDocuments = async (db) => {
 };
 
 const loadDesignDocuments = async (db) => {
-    /*const response = await db.createIndex({
-        "index": {
-            "fields": [
-                "_id",
-                "_rev",
-                "ssn",
-                "doc_type"
-            ]
-        },
-        "ddoc": "patients-ddoc",
-        "name": "patient-index",
-        "type": "json",
-        "partitioned": false
-    });*/
+    const response = await db.createIndex(patientIndexes.ssnIndex);
 
-    const response = await db.insert({
+    /*
+    const patientViewInsertResponse = await db.insert({
         _id: "_design/patient-view-ddoc",
         views: {
             basic: {
@@ -92,7 +82,22 @@ const loadDesignDocuments = async (db) => {
             }
         }
     });
-    console.log(response);
+    console.log(patientViewInsertResponse);
+
+    const providerViewInsertResponse = await db.insert({
+        _id: "_design/provider-view-ddoc",
+        views: {
+            info: {
+                map: providerViewFunctions.info.toString(),
+                reduce: "_count"
+            },
+            encounters_basic: {
+                map: providerViewFunctions.encountersBasic.toString(),
+                reduce: "_count"
+            }
+        }
+    });
+    console.log(providerViewInsertResponse);*/
 };
 
 module.exports = async () => {
