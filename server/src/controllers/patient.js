@@ -156,3 +156,37 @@ module.exports.findEncounter = async (ssn, encounterID) => {
         encounter: response.rows[0].value,
     };*/
 };
+
+module.exports.update = async (ssn, patient) => {
+    patient["doc_type"] = "patient";
+    patient["id"] = ssn;
+
+    const patientRes = await this.find(ssn);
+
+    if (patientRes.error) {
+        patient["_id"] = ssn;
+
+        const res = await db.get().insert(patient);
+        console.log(res);
+        return {};
+    }
+
+    patient["_id"] = patientRes.patient._id;
+    patient["_rev"] = patientRes.patient._rev;
+
+    const res = await db.get().insert(patient);
+    console.log(res);
+    return {};
+};
+
+module.exports.delete = async (ssn) => {
+    const patientRes = await this.find(ssn);
+
+    if (patientRes.error) {
+        return patientRes;
+    }
+
+    const res = await db.get().destroy(patientRes.patient._id, patientRes.patient._rev);
+    console.log(res);
+    return {};
+};

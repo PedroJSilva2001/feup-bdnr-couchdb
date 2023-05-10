@@ -15,6 +15,34 @@ router.get("/:patientSSN", async (req, res, next) => {
     res.send(patient);
 });
 
+router.put("/:patientSSN", async (req, res, next) => {
+    const ssn = req.params.patientSSN;
+
+    if (!ssn) {
+        res.status(400).send({
+            error: "missing patient SSN",
+        })
+        return;
+    }
+
+    const patientRes = await patientController.update(ssn);
+    return res.send(patientRes);
+});
+
+router.delete("/:patientSSN", async (req, res, next) => {
+    const ssn = req.params.patientSSN;
+
+    if (!ssn) {
+        res.status(400).send({
+            error: "missing patient SSN",
+        })
+        return;
+    }
+
+    const patientRes = await patientController.delete(ssn);
+    return res.send(patientRes);
+});
+
 router.get("/:patientSSN/encounters", async (req, res, next) => {
     const ssn = req.params.patientSSN;
 

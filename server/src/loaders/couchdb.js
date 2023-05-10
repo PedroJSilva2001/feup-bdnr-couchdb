@@ -7,6 +7,7 @@ const db = require("../couchdb/db.js");
 const patientViewFunctions = require("../couchdb/ddoc-functions/views/patient.js");
 const providerViewFunctions = require("../couchdb/ddoc-functions/views/provider.js");
 const patientIndexes = require("../couchdb/ddoc-functions/indexes/patient.js");
+const providerIndexes = require("../couchdb/ddoc-functions/indexes/provider.js");
 
 const server = nano(
     `http://${config.couchdb_user}:${config.couchdb_password}@${config.couchdb_host}:${config.couchdb_port}`
@@ -66,8 +67,17 @@ const loadDocuments = async (db) => {
 };
 
 const loadDesignDocuments = async (db) => {
-    const response = await db.createIndex(patientIndexes.ssnIndex);
+    let res = await db.createIndex(patientIndexes.ssnIndex);
+    console.log(res);
 
+    res = await db.createIndex(providerIndexes.idIndex);
+    console.log(res);
+    
+    res = await db.createIndex(providerIndexes.encountersFiltersIndex);
+    console.log(res);
+
+    res = await db.createIndex(providerIndexes.encountersSpecificPatientIndex);
+    console.log(res);
     /*
     const patientViewInsertResponse = await db.insert({
         _id: "_design/patient-view-ddoc",

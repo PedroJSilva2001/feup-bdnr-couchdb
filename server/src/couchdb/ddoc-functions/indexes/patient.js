@@ -18,7 +18,7 @@ module.exports.demographicsIndex = {
             "birthdate",
             "deathdate",
             "city",
-            "state"
+            "state",
         ]
     },
     "ddoc": "patients-ddoc",
