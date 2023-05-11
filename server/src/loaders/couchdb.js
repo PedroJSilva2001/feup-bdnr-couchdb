@@ -90,6 +90,10 @@ const loadDesignDocuments = async (db) => {
             payer_coverage: {
                 map: encounterStats.payerCoverageMap.toString(),
                 reduce: encounterStats.payerCoverageReduce.toString()
+            },
+            patient_evolution: {
+                map: encounterStats.patientEvolutionMap.toString(),
+                reduce: encounterStats.patientEvolutionReduce.toString()
             }
         }
     });
