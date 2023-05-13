@@ -4,8 +4,9 @@ const path = require('path');
 
 const config = require("../config/env.js");
 const db = require("../couchdb/db.js");
-const patientViewFunctions = require("../couchdb/ddoc-functions/views/patient.js");
-const providerViewFunctions = require("../couchdb/ddoc-functions/views/provider.js");
+//const patientViewFunctions = require("../couchdb/ddoc-functions/views/patient.js");
+//const providerViewFunctions = require("../couchdb/ddoc-functions/views/provider.js");
+const encounterStats = require("../couchdb/ddoc-functions/views/encounterStats.js");
 const patientIndexes = require("../couchdb/ddoc-functions/indexes/patient.js");
 const providerIndexes = require("../couchdb/ddoc-functions/indexes/provider.js");
 
@@ -78,6 +79,25 @@ const loadDesignDocuments = async (db) => {
 
     res = await db.createIndex(providerIndexes.encountersSpecificPatientIndex);
     console.log(res);
+
+    res = await db.insert({
+        _id: "_design/encounter-stats-view-ddoc",
+        views: {
+            allergy_frequency: {
+                map: encounterStats.allergyMap.toString(),
+                reduce: encounterStats.allergyReduce.toString()
+            },
+            payer_coverage: {
+                map: encounterStats.payerCoverageMap.toString(),
+                reduce: encounterStats.payerCoverageReduce.toString()
+            },
+            patient_evolution: {
+                map: encounterStats.patientEvolutionMap.toString(),
+                reduce: encounterStats.patientEvolutionReduce.toString()
+            }
+        }
+    });
+
     /*
     const patientViewInsertResponse = await db.insert({
         _id: "_design/patient-view-ddoc",
