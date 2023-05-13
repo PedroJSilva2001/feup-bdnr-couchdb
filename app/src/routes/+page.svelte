@@ -1,59 +1,42 @@
-<script>
-	import Counter from './Counter.svelte';
-	import welcome from '$lib/images/svelte-welcome.webp';
-	import welcome_fallback from '$lib/images/svelte-welcome.png';
-</script>
-
-<svelte:head>
-	<title>Home</title>
-	<meta name="description" content="Svelte demo app" />
-</svelte:head>
-
-<section>
-	<h1>
-		<span class="welcome">
-			<picture>
-				<source srcset={welcome} type="image/webp" />
-				<img src={welcome_fallback} alt="Welcome" />
-			</picture>
-		</span>
-
-		to your new<br />SvelteKit app
-	</h1>
-
-	<h2>
-		try editing <strong>src/routes/+page.svelte</strong>
-	</h2>
-
-	<Counter />
-</section>
+<div class="container">
+	<a href="login/provider" class="square"
+		><i class="fas fa-user-md" />
+		<h2>Login as Provider</h2></a
+	>
+	<a href="login/patient" class="square"
+		><i class="fas fa-user-injured" />
+		<h2>Login as Patient</h2></a
+	>
+</div>
 
 <style>
-	section {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		flex: 0.6;
+	.container {
+		text-align: center;
+		margin: auto;
 	}
-
-	h1 {
-		width: 100%;
+	.square {
+		border: solid #ccc;
+		border-radius: 1rem;
+		width: max-content;
+		height: max-content;
+		margin: 2rem;
+		display: inline-block;
+		text-align: center;
+		cursor: pointer;
+		padding: 1rem;
 	}
-
-	.welcome {
-		display: block;
-		position: relative;
-		width: 100%;
-		height: 0;
-		padding: 0 0 calc(100% * 495 / 2048) 0;
+	i {
+		font-size: 20rem;
 	}
-
-	.welcome img {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		top: 0;
-		display: block;
+	a {
+		color: #5f5f5f;
+	}
+	h2 {
+		font-size: 2rem;
+		font-weight: bold;
+		margin-top: 2rem;
+	}
+	a:hover {
+		text-decoration: none;
 	}
 </style>
