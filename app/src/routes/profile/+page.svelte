@@ -1,4 +1,4 @@
-<script defer>
+<script>
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	let ssn = '';
@@ -70,16 +70,17 @@
 		</div>
 		<div class="right-card">
 			<div class="card">
-				<h2><i class="fas fa-notes-medical" /> Last Encounters</h2>
+				<div class="card-header">
+					<h2><i class="fas fa-notes-medical" /> Last Encounters</h2>
+					<a href="/encounters"> See all</a>
+				</div>
 				{#if encounters.length === 0}
 					<p>No encounters found.</p>
 				{/if}
 				{#each encounters as encounter}
-					<a href={`/encounter/${encounter.id}`}>
-						<p>
-							{new Date(encounter.start).toLocaleDateString()}: {encounter.description}
-						</p>
-					</a>
+					<p>
+						{new Date(encounter.start).toLocaleDateString()}: {encounter.description}
+					</p>
 				{/each}
 			</div>
 		</div>
@@ -106,25 +107,29 @@
 		</div>
 		<div class="right-card">
 			<div class="card">
-				<h2><i class="fas fa-notes-medical" /> Last Encounters</h2>
+				<div class="card-header">
+					<h2><i class="fas fa-notes-medical" /> Last Encounters</h2>
+					<a href="/encounters"> See all</a>
+				</div>
 				{#if encounters.length == 0}
 					<p>No encounters found.</p>
 				{/if}
 				{#each encounters as encounter}
-					<a href={`/encounter/${encounter.id}`}>
-						<p>
-							{new Date(encounter.start).toLocaleDateString()}: {encounter.description}
-						</p>
-					</a>
+					<p>
+						{new Date(encounter.start).toLocaleDateString()}: {encounter.description}
+					</p>
 				{/each}
 			</div>
 		</div>
 	</div>
-{:else}
-	<p>Loading...</p>
 {/if}
 
 <style>
+	.card-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
 	.cards-container {
 		display: flex;
 	}
@@ -165,14 +170,14 @@
 		border-radius: 5px;
 		padding: 0.5rem;
 	}
-	.right-card .card a {
-		color: #000;
-	}
 
-	.right-card a:hover {
-		text-decoration: none;
+	a {
+		color: #000000;
+		margin-right: 1rem;
 	}
-	.right-card:hover a:hover p {
-		border: solid thin #000;
+	a:hover {
+		color: #000000;
+		text-decoration: none;
+		cursor: pointer;
 	}
 </style>
