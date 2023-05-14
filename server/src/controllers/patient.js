@@ -54,7 +54,7 @@ module.exports.find = async (ssn) => {
           doc_type: "patient",
           ssn: ssn
         },
-        fields: [ "_id", ...nonAggregatedInfo ],
+        fields: [ "_id", "_rev", ...nonAggregatedInfo ],
         use_index: [`_design/${patientIndexes.ssnIndex.ddoc}`, patientIndexes.ssnIndex.name]
     };
 
@@ -159,7 +159,7 @@ module.exports.findEncounter = async (ssn, encounterID) => {
 
 module.exports.update = async (ssn, patient) => {
     patient["doc_type"] = "patient";
-    patient["id"] = ssn;
+    patient["ssn"] = ssn;
 
     const patientRes = await this.find(ssn);
 

@@ -17,6 +17,7 @@
     "express-session": "^1.17.3",
     "express-validator": "^7.0.1",
     "http-status-codes": "^2.2.0",
-    "nano": "^10.1.2"
+    "nano": "^10.1.2",
+    "cors": "^2.8.5"
   }
 }

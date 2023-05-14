@@ -25,7 +25,7 @@ router.put("/:patientSSN", async (req, res, next) => {
         return;
     }
 
-    const patientRes = await patientController.update(ssn);
+    const patientRes = await patientController.update(ssn, req.body);
     return res.send(patientRes);
 });
 

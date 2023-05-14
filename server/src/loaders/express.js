@@ -1,5 +1,6 @@
 const express = require("express");
 const StatusCodes = require("http-status-codes").StatusCodes;
+const cors = require('cors');
 
 const apiRoutes = require("../api/index.js");
 
@@ -21,4 +22,7 @@ module.exports = (app) => {
   });
 
   app.use(apiRoutes());
+
+  // Enable CORS for all requests
+  app.use(cors());
 };

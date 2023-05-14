@@ -1,10 +1,20 @@
 <script>
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { detach_after_dev } from 'svelte/internal';
 	let ssn = '';
 	let pid = '';
 	let patient = {};
 	let provider = {};
+	let prefix = '';
+	let firstName = '';
+	let lastName = '';
+	let birthdate= '';
+	let gender = '';
+	let address = '';
+	let city = '';
+	let state = '';
+	let zip = '';
 	/**
 	 * @type {string | any[]}
 	 */
@@ -22,6 +32,16 @@
 			const res = await fetch('http://localhost:8888/patient/' + ssn);
 			const { patient: patientData } = await res.json();
 			patient = patientData;
+			prefix = patient.prefix;
+			firstName = patient.first
+			lastName = patient.last;
+			birthdate = patient.birthdate;
+			ssn = patient.ssn;
+			gender = patient.gender;
+			address = patient.address;
+			city = patient.city;
+			state = patient.state;
+			zip = patient.zip;
 
 			const res2 = await fetch('http://localhost:8888/patient/' + ssn + '/encounters');
 			const { encounters: encountersData } = await res2.json();
@@ -42,6 +62,67 @@
 	// Use a reactive statement to automatically update the `isLoading` variable
 	let isLoading = true;
 	$: isLoading = Object.keys(provider).length === 0 && Object.keys(patient).length === 0;
+
+	console.log("ola", ssn);
+	async function updateProfile() {
+		try{
+
+			const res = await fetch('http://localhost:8888/patient/' + ssn, {
+				method: 'PUT',
+				body: JSON.stringify({
+					ssn: ssn,
+					birthdate: birthdate,
+					deathdate: patient.deathdate,
+					drivers: patient.drivers,
+					passport: patient.passport,
+					prefix: prefix,
+					first: firstName,
+					last: lastName,
+					suffix: patient.suffix,
+					maiden: patient.maiden,
+					marital: patient.marital,
+					race: patient.race,
+					ethnicity: patient.ethnicity,
+					gender: gender,
+					birthplace: patient.birthplace,
+					address: address,
+					city: city,
+					state: state,
+					county: patient.county,
+					fips: patient.fips,
+					zip: zip,
+					lat: patient.lat,
+					lon: patient.lon
+				})
+			});
+		} catch(err) {
+			console.log("erro", err);
+		}
+		console.log(JSON.stringify({
+				ssn: ssn,
+				birthdate: birthdate,
+				deathdate: patient.deathdate,
+				drivers: patient.drivers,
+				passport: patient.passport,
+				prefix: prefix,
+				first: firstName,
+				last: lastName,
+				suffix: patient.suffix,
+				maiden: patient.maiden,
+				marital: patient.marital,
+				race: patient.race,
+				ethnicity: patient.ethnicity,
+				gender: gender,
+				birthplace: patient.birthplace,
+				address: address,
+				city: city,
+				state: state,
+				county: patient.county,
+				fips: patient.fips,
+				zip: zip,
+				lat: patient.lat,
+				lon: patient.lon}));
+	}
 </script>
 
 {#if isLoading}
@@ -52,7 +133,11 @@
 		<div class="left-cards">
 			<div class="card">
 				<h2><i class="fas fa-user" /> Personal Information</h2>
-				<p><strong>Name:</strong> {provider.name}</p>
+				<p><strong>Name:</strong> 
+					<label for="prefix">Prefix</label>
+					<input type="text" id="prefix" bind:value={prefix}/>
+				</p>
+			
 				<p><strong>Gender:</strong> {provider.gender}</p>
 				<p><strong>Speciality:</strong> {provider.speciality}</p>
 			</div>
@@ -68,22 +153,6 @@
 				</p>
 			</div>
 		</div>
-		<div class="right-card">
-			<div class="card">
-				<div class="card-header">
-					<h2><i class="fas fa-notes-medical" /> Last Encounters</h2>
-					<a href="/encounters"> See all</a>
-				</div>
-				{#if encounters.length === 0}
-					<p>No encounters found.</p>
-				{/if}
-				{#each encounters as encounter}
-					<p>
-						{new Date(encounter.start).toLocaleDateString()}: {encounter.description}
-					</p>
-				{/each}
-			</div>
-		</div>
 	</div>
 {:else if Object.keys(patient).length > 0}
 	<h1>My Patient Profile</h1>
@@ -92,37 +161,46 @@
 			<div class="card">
 				<div class="card-header">
 					<h2><i class="fas fa-user" /> Personal Information</h2>
-					<a href="/profile/edit" class="fas fa-edit"></a>
 				</div>
-				<p><strong>Name:</strong> {patient.prefix} {patient.first} {patient.last}</p>
-				<p><strong>Birthdate:</strong> {patient.birthdate}</p>
-				<p><strong>SSN:</strong> {patient.ssn}</p>
-				<p><strong>Gender:</strong> {patient.gender}</p>
+				<p><strong>Prefix:</strong> 
+					<input type="text" id="prefix" bind:value={prefix}/>
+				</p>
+				<p><strong>Fisrt Name:</strong> 
+					<input type="text" id="firstName" bind:value={firstName}/>
+				</p>
+				<p><strong>Last Name:</strong> 
+					<input type="text" id="lastName" bind:value={lastName}/>
+				</p>
+				<p><strong>Birthdate:</strong>
+					<input type="date" id="birthdate" bind:value={birthdate}/>
+				</p>
+				<p><strong>SSN:</strong> 
+					<input type="text" id="ssn" bind:value={ssn}/>
+				</p>
+				<p><strong>Gender:</strong> 
+					<input type="text" id="gender" bind:value={gender}/>
+				</p>
 			</div>
 			<div class="card">
 				<h2><i class="fas fa-map-marker-alt" /> Contact Information</h2>
 				<p>
 					<strong>Address:</strong>
-					{patient.address}, {patient.city}, {patient.state}
-					{patient.zip}
+					<input type="text" id="address" bind:value={address}/>
+				</p>
+				<p>
+					<strong>City:</strong>
+					<input type="text" id="city" bind:value={city}/>
+				</p>
+				<p>
+					<strong>State:</strong>
+					<input type="text" id="state" bind:value={state}/>
+				</p>
+				<p>
+					<strong>Zip:</strong>
+					<input type="text" id="zip" bind:value={zip}/>
 				</p>
 			</div>
-		</div>
-		<div class="right-card">
-			<div class="card">
-				<div class="card-header">
-					<h2><i class="fas fa-notes-medical" /> Last Encounters</h2>
-					<a href="/encounters"> See all</a>
-				</div>
-				{#if encounters.length == 0}
-					<p>No encounters found.</p>
-				{/if}
-				{#each encounters as encounter}
-					<p>
-						{new Date(encounter.start).toLocaleDateString()}: {encounter.description}
-					</p>
-				{/each}
-			</div>
+			<button type="button" on:click={updateProfile}>Save</button> 
 		</div>
 	</div>
 {/if}
