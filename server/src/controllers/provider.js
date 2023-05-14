@@ -42,29 +42,14 @@ module.exports.find = async (id) => {
     };
 };
 
-module.exports.filtersIndex = {
-    "index": {
-        "fields": [
-            "doc_type",
-            "gender",
-            "speciality",
-            "city",
-            "state",
-        ]
-    },
-    "ddoc": "providers-ddoc",
-    "name": "providers-filters-index",
-    "type": "json",
-    "partitioned": false
-};
-
 module.exports.findMany = async (opts) => {
     const q = {
         selector: {
           doc_type: "provider",
         },
         //fields: [ "_id", ...info ],
-        use_index: [`_design/${providerIndex.idIndex.ddoc}`, providerIndex.idIndex.name]
+        use_index: [`_design/${providerIndex.filtersIndex.ddoc}`, providerIndex.filtersIndex.name]
+        //use_index: [`_design/${providerIndex.idIndex.ddoc}`, providerIndex.idIndex.name]
     };
 
     if (opts.gender) {
@@ -138,7 +123,8 @@ module.exports.findEncounters = async (id, opts) => {
         }
 
         if (opts.payer) {
-            q.selector.payer = opts.payer;
+            q.selector.payer = {};
+            q.selector.payer.id = opts.payer;
         }
         
         console.log(q);
