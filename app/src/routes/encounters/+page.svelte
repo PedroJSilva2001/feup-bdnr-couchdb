@@ -84,6 +84,15 @@
 		classFilter = '';
 		updateEncounters();
 	}
+
+	function toggleMoreInfo(id) {
+		const moreInfoElement = document.getElementById(id);
+		if (moreInfoElement.hidden) {
+			moreInfoElement.hidden = false;
+		} else {
+			moreInfoElement.hidden = true;
+		}
+	}
 </script>
 
 <button
@@ -142,16 +151,81 @@
 			<div class="loading"><h3><i class="fa fa-spinner fa-spin" /> Loading</h3></div>
 		{:else if Object.keys(encounters).length > 0 && serverLoaded}
 			{#each encounters as encounter}
-				<div class="card">
-					<h2>{encounter.description}</h2>
-					<p><strong>Start Date:</strong> {new Date(encounter.start).toLocaleString()}</p>
-					<p><strong>Stop Date:</strong> {new Date(encounter.stop).toLocaleString()}</p>
-					<p><strong>Provider:</strong> {encounter.provider.name}</p>
-					<p><strong>Speciality:</strong> {encounter.provider.speciality}</p>
-					<p><strong>Organization:</strong> {encounter.organization.name}</p>
-					<p><strong>Address:</strong> {encounter.organization.address}</p>
-					<p><strong>Class:</strong> {encounter.encounter_class}</p>
-				</div>
+				{#if pid && !ssn}
+					<div class="card">
+						<h2>{encounter.description}</h2>
+						<p><strong>Start Date:</strong> {new Date(encounter.start).toLocaleString()}</p>
+						<p><strong>Stop Date:</strong> {new Date(encounter.stop).toLocaleString()}</p>
+						<p><strong>Patient:</strong> {encounter.patient.first} {encounter.patient.last}</p>
+						<p><strong>Speciality:</strong> {encounter.provider.speciality}</p>
+						<p><strong>Organization:</strong> {encounter.organization.name}</p>
+						<p><strong>Address:</strong> {encounter.organization.address}</p>
+						<p><strong>Class:</strong> {encounter.encounter_class}</p>
+						<button on:click={() => toggleMoreInfo(encounter.id)}>Show More</button>
+						<div id={encounter.id} class="more-info" hidden>
+							<p><strong>Payer:</strong> {encounter.payer.name}</p>
+							{#if encounter.medications.length > 0}
+								<p><strong>Medication:</strong></p>
+								<ul>
+									{#each encounter.medications as medication}
+										<li>{medication.description}</li>
+									{/each}
+								</ul>
+							{/if}
+							{#if encounter.procedures.length > 0}
+								<p><strong>Procedures:</strong></p>
+								<ul>
+									{#each encounter.procedures as procedure}
+										<li>{procedure.description}</li>
+									{/each}
+								</ul>
+							{/if}
+							{#if encounter.imaging_studies.length > 0}
+								<p><strong>Imaging Studies:</strong></p>
+								<ul>
+									{#each encounter.imaging_studies as imaging_study}
+										<li>{imaging_study.description}</li>
+									{/each}
+								</ul>
+							{/if}
+							{#if encounter.devices.length > 0}
+								<p><strong>Devices:</strong></p>
+								<ul>
+									{#each encounter.devices as device}
+										<li>{device.description}</li>
+									{/each}
+								</ul>
+							{/if}
+							{#if encounter.allergies.length > 0}
+								<p><strong>Allergies:</strong></p>
+								<ul>
+									{#each encounter.allergies as allergy}
+										<li>{allergy.description}</li>
+									{/each}
+								</ul>
+							{/if}
+							{#if encounter.observations.length > 0}
+								<p><strong>Observations:</strong></p>
+								<ul>
+									{#each encounter.observations as observation}
+										<li>{observation.description}</li>
+									{/each}
+								</ul>
+							{/if}
+						</div>
+					</div>
+				{:else}
+					<div class="card">
+						<h2>{encounter.description}</h2>
+						<p><strong>Start Date:</strong> {new Date(encounter.start).toLocaleString()}</p>
+						<p><strong>Stop Date:</strong> {new Date(encounter.stop).toLocaleString()}</p>
+						<p><strong>Provider:</strong> {encounter.provider.name}</p>
+						<p><strong>Speciality:</strong> {encounter.provider.speciality}</p>
+						<p><strong>Organization:</strong> {encounter.organization.name}</p>
+						<p><strong>Address:</strong> {encounter.organization.address}</p>
+						<p><strong>Class:</strong> {encounter.encounter_class}</p>
+					</div>
+				{/if}
 			{/each}
 		{:else}
 			<div class="card">
@@ -162,6 +236,10 @@
 </div>
 
 <style>
+	h2 {
+		font-size: large;
+		font-weight: bold;
+	}
 	.container {
 		display: flex;
 	}
@@ -231,5 +309,9 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
+	}
+
+	.more-info {
+		margin-top: 10px;
 	}
 </style>
