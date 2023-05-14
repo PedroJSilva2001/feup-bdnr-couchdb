@@ -6,7 +6,7 @@
 		const res = await fetch(`http://localhost:8888/patient/${ssn}`);
 		const data = await res.json();
 
-		if (data) {
+		if (!data.error) {
 			localStorage.removeItem('pid');
 			localStorage.removeItem('ssn');
 			localStorage.setItem('ssn', ssn);
