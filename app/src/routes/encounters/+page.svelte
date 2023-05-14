@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	let ssn = '';
 	let pid = '';
+	let serverLoaded = false;
 	/**
 	 * @type {string | any[]}
 	 */
@@ -19,19 +20,18 @@
 		if (ssn && !pid) {
 			const res2 = await fetch('http://localhost:8888/patient/' + ssn + '/encounters');
 			const { encounters: encountersData } = await res2.json();
-			encounters = encountersData;
+			encounters = encountersData.reverse();
 		}
 
 		if (!ssn && pid) {
-			const res2 = await fetch('http://localhost:8888/provider/' + ssn + '/encounters');
-			const { encounters: encountersData } = await res2.json();
-			encounters = encountersData;
+			const res2 = await fetch('http://localhost:8888/provider/' + pid + '/encounters');
+			const encountersData = await res2.json();
+			encounters = encountersData.reverse();
 		}
+		serverLoaded = true;
 	});
 
 	// Use a reactive statement to automatically update the `isLoading` variable
-	let isLoading = true;
-	$: isLoading = Object.keys(encounters).length === 0;
 
 	let filter = '';
 	let startDateFilter = '';
@@ -46,31 +46,35 @@
 		startDateFilter = event.target.value;
 	}
 
+	async function handleClassFilterChange(event) {
+		classFilter = event.target.value;
+	}
 	async function handleEndDateFilterChange(event) {
 		endDateFilter = event.target.value;
 	}
 
-	async function handleClassFilterChange(event) {
-		classFilter = event.target.value;
-	}
-
 	async function updateEncounters() {
+		serverLoaded = false;
 		let url = 'http://localhost:8888/';
-		if (ssn && !pid) {
-			url += 'patient/' + ssn + '/encounters';
-		} else if (!ssn && pid) {
+		if (!ssn && pid) {
 			url += 'provider/' + pid + '/encounters';
 		}
 
-		if (startDateFilter || endDateFilter) {
-			url += `?start=${startDateFilter}&end=${endDateFilter}`;
-		} else if (classFilter) {
+		if (startDateFilter) {
+			url += `?start=${startDateFilter}`;
+		}
+		if (endDateFilter) {
+			url += `?end=${endDateFilter}`;
+		}
+		if (classFilter) {
 			url += `?class=${classFilter}`;
 		}
-
+		console.log(url);
 		const res2 = await fetch(url);
-		const { encounters: encountersData } = await res2.json();
-		encounters = encountersData;
+		const encountersData = await res2.json();
+
+		encounters = encountersData.reverse();
+		serverLoaded = true;
 	}
 
 	function clearFilters() {
@@ -82,31 +86,43 @@
 	}
 </script>
 
-{#if isLoading}
-	<p>Loading...</p>
-{:else if Object.keys(encounters).length > 0}
-	<div class="container">
+<button
+	class="route-button profile-button"
+	on:click={() => {
+		goto('/profile');
+	}}>My Profile</button
+>
+<button
+	class="route-button logout-button"
+	on:click={() => {
+		localStorage.removeItem('ssn');
+		localStorage.removeItem('pid');
+		goto('/');
+	}}>Logout</button
+>
+<div class="container">
+	{#if pid && !ssn}
 		<div class="left-column">
-			<h2>Filters</h2>
+			<label for="start-date">Start Date</label>
 			<input
-				type="text"
-				placeholder="Search..."
-				oninput={handleFilterChange}
-				class="filter-input"
-			/>
-			<input
+				id="start-date"
 				type="date"
 				placeholder="Start Date"
-				oninput={handleStartDateFilterChange}
+				on:input={handleStartDateFilterChange}
 				class="filter-input"
+				bind:value={startDateFilter}
 			/>
+			<label for="end-date">End Date</label>
 			<input
+				id="end-date"
 				type="date"
 				placeholder="End Date"
-				oninput={handleEndDateFilterChange}
+				on:input={handleEndDateFilterChange}
 				class="filter-input"
+				bind:value={endDateFilter}
 			/>
-			<select onchange={handleClassFilterChange} class="filter-input">
+			<label for="class">Class</label>
+			<select on:input={handleClassFilterChange} class="filter-input">
 				<option value="">All Classes</option>
 				<option value="wellness">Wellness</option>
 				<option value="emergency">Emergency</option>
@@ -115,16 +131,21 @@
 				<option value="ambulatory">Ambulatory</option>
 				<option value="urgentcare">Urgent Care</option>
 			</select>
+
 			<button on:click={updateEncounters} class="search-button">Search</button>
 			<button on:click={clearFilters} class="clear-button">Clear Filters</button>
 		</div>
-		<div class="right-column">
-			<h1>Encounters</h1>
+	{/if}
+	<div class="right-column">
+		<h1>Encounters</h1>
+		{#if !serverLoaded}
+			<div class="loading"><h3><i class="fa fa-spinner fa-spin" /> Loading</h3></div>
+		{:else if Object.keys(encounters).length > 0 && serverLoaded}
 			{#each encounters as encounter}
 				<div class="card">
 					<h2>{encounter.description}</h2>
-					<p><strong>Start:</strong> {new Date(encounter.start).toLocaleString()}</p>
-					<p><strong>Stop:</strong> {new Date(encounter.stop).toLocaleString()}</p>
+					<p><strong>Start Date:</strong> {new Date(encounter.start).toLocaleString()}</p>
+					<p><strong>Stop Date:</strong> {new Date(encounter.stop).toLocaleString()}</p>
 					<p><strong>Provider:</strong> {encounter.provider.name}</p>
 					<p><strong>Speciality:</strong> {encounter.provider.speciality}</p>
 					<p><strong>Organization:</strong> {encounter.organization.name}</p>
@@ -132,11 +153,13 @@
 					<p><strong>Class:</strong> {encounter.encounter_class}</p>
 				</div>
 			{/each}
-		</div>
+		{:else}
+			<div class="card">
+				<p>No encounters found.</p>
+			</div>
+		{/if}
 	</div>
-{:else}
-	<p>No encounters found.</p>
-{/if}
+</div>
 
 <style>
 	.container {
@@ -144,12 +167,13 @@
 	}
 
 	.left-column {
-		flex-basis: 200px;
+		flex-basis: 100px;
 		margin-right: 1rem;
+		margin-top: 3rem;
 	}
 
 	.right-column {
-		flex-grow: 1;
+		flex-grow: 2;
 	}
 
 	.card {
@@ -177,5 +201,35 @@
 	.search-button,
 	.clear-button {
 		cursor: pointer;
+	}
+
+	.route-button {
+		position: absolute;
+		top: 20px;
+		background-color: rgba(0, 0, 0, 0.7);
+		border-radius: 10%;
+		color: white;
+		padding: 1rem 2rem;
+		text-align: center;
+		font-size: 1rem;
+		cursor: pointer;
+	}
+
+	.profile-button {
+		right: 10rem;
+	}
+	.logout-button {
+		right: 1rem;
+	}
+	.fa-spinner {
+		font-size: 2rem;
+	}
+	h3 {
+		font-size: 2rem;
+	}
+	.loading {
+		display: flex;
+		justify-content: center;
+		align-items: center;
 	}
 </style>

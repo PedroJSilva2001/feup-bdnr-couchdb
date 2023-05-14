@@ -25,17 +25,20 @@
 
 			const res2 = await fetch('http://localhost:8888/patient/' + ssn + '/encounters');
 			const { encounters: encountersData } = await res2.json();
-			encounters = encountersData.slice(-5);
+			encounters = encountersData.slice(-5).reverse();
 		}
 
 		if (!ssn && pid) {
 			const res = await fetch('http://localhost:8888/provider/' + pid);
 			const { provider: providerData } = await res.json();
 			provider = providerData;
+			console.log('pid', pid);
+			console.log('url', 'http://localhost:8888/provider/' + pid + '/encounters');
 
-			const res2 = await fetch('http://localhost:8888/provider/' + ssn + '/encounters');
-			const { encounters: encountersData } = await res2.json();
-			encounters = encountersData.slice(-5);
+			const res2 = await fetch('http://localhost:8888/provider/' + pid + '/encounters');
+			const encountersData = await res2.json();
+			console.log('encountersData', encountersData);
+			encounters = encountersData.slice(-5).reverse();
 		}
 	});
 
@@ -45,9 +48,17 @@
 </script>
 
 {#if isLoading}
-	<p>Loading...</p>
+	<h3 class="loading"><i class="fa fa-spinner fa-spin" /> Loading...</h3>
 {:else if Object.keys(provider).length > 0}
 	<h1>My Provider Profile</h1>
+	<button
+		on:click={() => {
+			localStorage.removeItem('ssn');
+			localStorage.removeItem('pid');
+			goto('/');
+		}}>Logout</button
+	>
+
 	<div class="cards-container">
 		<div class="left-cards">
 			<div class="card">
@@ -72,7 +83,9 @@
 			<div class="card">
 				<div class="card-header">
 					<h2><i class="fas fa-notes-medical" /> Last Encounters</h2>
-					<a href="/encounters"> See all</a>
+					{#if encounters.length !== 0}
+						<a href="/encounters"> See all</a>
+					{/if}
 				</div>
 				{#if encounters.length === 0}
 					<p>No encounters found.</p>
@@ -87,12 +100,20 @@
 	</div>
 {:else if Object.keys(patient).length > 0}
 	<h1>My Patient Profile</h1>
+	<button
+		on:click={() => {
+			localStorage.removeItem('ssn');
+			localStorage.removeItem('pid');
+			goto('/');
+		}}>Logout</button
+	>
+
 	<div class="cards-container">
 		<div class="left-cards">
 			<div class="card">
 				<div class="card-header">
 					<h2><i class="fas fa-user" /> Personal Information</h2>
-					<a href="/profile/edit" class="fas fa-edit"></a>
+					<a href="/profile/edit" class="fas fa-edit" />
 				</div>
 				<p><strong>Name:</strong> {patient.prefix} {patient.first} {patient.last}</p>
 				<p><strong>Birthdate:</strong> {patient.birthdate}</p>
@@ -182,5 +203,28 @@
 		color: #000000;
 		text-decoration: none;
 		cursor: pointer;
+	}
+	button {
+		position: absolute;
+		top: 20px;
+		right: 20px;
+		background-color: rgba(0, 0, 0, 0.7);
+		border-radius: 10%;
+		color: white;
+		padding: 1rem 2rem;
+		text-align: center;
+		font-size: 1rem;
+		cursor: pointer;
+	}
+	.fa-spinner {
+		font-size: 2rem;
+	}
+	h3 {
+		font-size: 2rem;
+	}
+	.loading {
+		display: flex;
+		justify-content: center;
+		align-items: center;
 	}
 </style>

@@ -9,7 +9,7 @@
 	let prefix = '';
 	let firstName = '';
 	let lastName = '';
-	let birthdate= '';
+	let birthdate = '';
 	let gender = '';
 	let address = '';
 	let city = '';
@@ -33,7 +33,7 @@
 			const { patient: patientData } = await res.json();
 			patient = patientData;
 			prefix = patient.prefix;
-			firstName = patient.first
+			firstName = patient.first;
 			lastName = patient.last;
 			birthdate = patient.birthdate;
 			ssn = patient.ssn;
@@ -63,10 +63,9 @@
 	let isLoading = true;
 	$: isLoading = Object.keys(provider).length === 0 && Object.keys(patient).length === 0;
 
-	console.log("ola", ssn);
+	console.log('ola', ssn);
 	async function updateProfile() {
-		try{
-
+		try {
 			const res = await fetch('http://localhost:8888/patient/' + ssn, {
 				method: 'PUT',
 				body: JSON.stringify({
@@ -95,10 +94,11 @@
 					lon: patient.lon
 				})
 			});
-		} catch(err) {
-			console.log("erro", err);
+		} catch (err) {
+			console.log('erro', err);
 		}
-		console.log(JSON.stringify({
+		console.log(
+			JSON.stringify({
 				ssn: ssn,
 				birthdate: birthdate,
 				deathdate: patient.deathdate,
@@ -121,23 +121,26 @@
 				fips: patient.fips,
 				zip: zip,
 				lat: patient.lat,
-				lon: patient.lon}));
+				lon: patient.lon
+			})
+		);
 	}
 </script>
 
 {#if isLoading}
-	<p>Loading...</p>
+	<h3 class="loading"><i class="fa fa-spinner fa-spin" /> Loading...</h3>
 {:else if Object.keys(provider).length > 0}
 	<h1>My Provider Profile</h1>
 	<div class="cards-container">
 		<div class="left-cards">
 			<div class="card">
 				<h2><i class="fas fa-user" /> Personal Information</h2>
-				<p><strong>Name:</strong> 
+				<p>
+					<strong>Name:</strong>
 					<label for="prefix">Prefix</label>
-					<input type="text" id="prefix" bind:value={prefix}/>
+					<input type="text" id="prefix" bind:value={prefix} />
 				</p>
-			
+
 				<p><strong>Gender:</strong> {provider.gender}</p>
 				<p><strong>Speciality:</strong> {provider.speciality}</p>
 			</div>
@@ -162,45 +165,51 @@
 				<div class="card-header">
 					<h2><i class="fas fa-user" /> Personal Information</h2>
 				</div>
-				<p><strong>Prefix:</strong> 
-					<input type="text" id="prefix" bind:value={prefix}/>
+				<p>
+					<strong>Prefix:</strong>
+					<input type="text" id="prefix" bind:value={prefix} />
 				</p>
-				<p><strong>Fisrt Name:</strong> 
-					<input type="text" id="firstName" bind:value={firstName}/>
+				<p>
+					<strong>Fisrt Name:</strong>
+					<input type="text" id="firstName" bind:value={firstName} />
 				</p>
-				<p><strong>Last Name:</strong> 
-					<input type="text" id="lastName" bind:value={lastName}/>
+				<p>
+					<strong>Last Name:</strong>
+					<input type="text" id="lastName" bind:value={lastName} />
 				</p>
-				<p><strong>Birthdate:</strong>
-					<input type="date" id="birthdate" bind:value={birthdate}/>
+				<p>
+					<strong>Birthdate:</strong>
+					<input type="date" id="birthdate" bind:value={birthdate} />
 				</p>
-				<p><strong>SSN:</strong> 
-					<input type="text" id="ssn" bind:value={ssn}/>
+				<p>
+					<strong>SSN:</strong>
+					<input type="text" id="ssn" bind:value={ssn} />
 				</p>
-				<p><strong>Gender:</strong> 
-					<input type="text" id="gender" bind:value={gender}/>
+				<p>
+					<strong>Gender:</strong>
+					<input type="text" id="gender" bind:value={gender} />
 				</p>
 			</div>
 			<div class="card">
 				<h2><i class="fas fa-map-marker-alt" /> Contact Information</h2>
 				<p>
 					<strong>Address:</strong>
-					<input type="text" id="address" bind:value={address}/>
+					<input type="text" id="address" bind:value={address} />
 				</p>
 				<p>
 					<strong>City:</strong>
-					<input type="text" id="city" bind:value={city}/>
+					<input type="text" id="city" bind:value={city} />
 				</p>
 				<p>
 					<strong>State:</strong>
-					<input type="text" id="state" bind:value={state}/>
+					<input type="text" id="state" bind:value={state} />
 				</p>
 				<p>
 					<strong>Zip:</strong>
-					<input type="text" id="zip" bind:value={zip}/>
+					<input type="text" id="zip" bind:value={zip} />
 				</p>
 			</div>
-			<button type="button" on:click={updateProfile}>Save</button> 
+			<button type="button" on:click={updateProfile}>Save</button>
 		</div>
 	</div>
 {/if}
@@ -260,5 +269,16 @@
 		color: #000000;
 		text-decoration: none;
 		cursor: pointer;
+	}
+	.fa-spinner {
+		font-size: 2rem;
+	}
+	h3 {
+		font-size: 2rem;
+	}
+	.loading {
+		display: flex;
+		justify-content: center;
+		align-items: center;
 	}
 </style>
