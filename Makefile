@@ -1,15 +1,15 @@
 build_dev:
-	docker-compose build server-dev couchserver
+	docker compose build server-dev couchserver
 
 build_prod:
-	docker-compose build server-prod couchserver
+	docker compose build server-prod couchserver
 
 run_dev:
-	docker-compose up server-dev
+	docker compose up server-dev
 
 
 run_prod:
-	docker-compose up server-prod
+	docker compose up server-prod
 
 clean:
 	docker rm healthtracks-server-dev -f
