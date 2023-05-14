@@ -89,10 +89,10 @@ router.get("/:providerID/encounters", async (req, res, next) => {
     const opts = {
         start: startRes? startRes : date.isoDateEpoch(),
         end: endRes? endRes : date.isoDateNow(),
-        patient: req.params.patient,
-        class: req.params.class,
-        code: req.params.code,
-        payer: req.params.payer,
+        patient: req.query.patient,
+        class: req.query.class,
+        code: req.query.code,
+        payer: req.query.payer,
     }
 
     const encounters = await providerController.findEncounters(id, opts);
