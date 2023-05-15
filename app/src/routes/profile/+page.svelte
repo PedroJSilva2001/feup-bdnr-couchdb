@@ -32,12 +32,8 @@
 			const res = await fetch('http://localhost:8888/provider/' + pid);
 			const { provider: providerData } = await res.json();
 			provider = providerData;
-			console.log('pid', pid);
-			console.log('url', 'http://localhost:8888/provider/' + pid + '/encounters');
-
 			const res2 = await fetch('http://localhost:8888/provider/' + pid + '/encounters');
 			const encountersData = await res2.json();
-			console.log('encountersData', encountersData);
 			encounters = encountersData.slice(-5).reverse();
 		}
 	});
@@ -59,21 +55,31 @@
 {#if isLoading}
 	<h3 class="loading"><i class="fa fa-spinner fa-spin" /> Loading...</h3>
 {:else if Object.keys(provider).length > 0}
-	<h1>My Provider Profile</h1>
-	<button
-		class="route-button organizations-button"
-		on:click={() => {
-			goto('/organizations');
-		}}>See Organizations</button
-	>
-	<button
-		class="route-button logout-button"
-		on:click={() => {
-			localStorage.removeItem('ssn');
-			localStorage.removeItem('pid');
-			goto('/');
-		}}>Logout</button
-	>
+	<nav>
+		<h1>My Provider Profile</h1>
+		<div>
+			<button
+				class="route-button"
+				on:click={() => {
+					goto('/search');
+				}}>Search Patients</button
+			>
+			<button
+				class="route-button"
+				on:click={() => {
+					goto('/organizations');
+				}}>See Organizations</button
+			>
+			<button
+				class="route-button"
+				on:click={() => {
+					localStorage.removeItem('ssn');
+					localStorage.removeItem('pid');
+					goto('/');
+				}}>Logout</button
+			>
+		</div>
+	</nav>
 
 	<div class="cards-container">
 		<div class="left-cards">
@@ -94,6 +100,18 @@
 					{provider.organization.zip}
 				</p>
 			</div>
+			<button
+				class="action-button"
+				on:click={() => {
+					goto('/stats/allergies');
+				}}>See allergy incidence</button
+			>
+			<button
+				class="action-button"
+				on:click={() => {
+					goto('/stats/payer_coverage');
+				}}>See payer coverage</button
+			>
 		</div>
 		<div class="right-card">
 			<div class="card">
@@ -115,14 +133,25 @@
 		</div>
 	</div>
 {:else if Object.keys(patient).length > 0}
-	<h1>My Patient Profile</h1>
-	<button
-		on:click={() => {
-			localStorage.removeItem('ssn');
-			localStorage.removeItem('pid');
-			goto('/');
-		}}>Logout</button
-	>
+	<nav>
+		<h1>My Patient Profile</h1>
+		<div>
+			<button
+				class="route-button"
+				on:click={() => {
+					goto('/organizations');
+				}}>See Organizations</button
+			>
+			<button
+				class="route-button"
+				on:click={() => {
+					localStorage.removeItem('ssn');
+					localStorage.removeItem('pid');
+					goto('/');
+				}}>Logout</button
+			>
+		</div>
+	</nav>
 
 	<div class="cards-container">
 		<div class="left-cards">
@@ -144,6 +173,30 @@
 					{patient.zip}
 				</p>
 			</div>
+			<button
+				class="action-button"
+				on:click={() => {
+					goto('/stats/allergies');
+				}}
+			>
+				See allergy incidence</button
+			>
+			<button
+				class="action-button"
+				on:click={() => {
+					goto('/stats/evolution');
+				}}
+			>
+				See patient evolution</button
+			>
+			<button
+				class="action-button"
+				on:click={() => {
+					goto('/stats/payer_coverage');
+				}}
+			>
+				See payer coverage</button
+			>
 		</div>
 		<div class="right-card">
 			<div class="card">
@@ -170,6 +223,11 @@
 {/if}
 
 <style>
+	nav {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
 	.card-header {
 		display: flex;
 		justify-content: space-between;
@@ -182,6 +240,9 @@
 	.left-cards {
 		flex: 1;
 		margin-right: 1.5rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	}
 
 	.right-card {
@@ -225,9 +286,10 @@
 		text-decoration: none;
 		cursor: pointer;
 	}
+
 	.route-button {
-		position: absolute;
-		top: 20px;
+		display: inline-block;
+		margin-right: 1rem;
 		background-color: rgba(0, 0, 0, 0.7);
 		border-radius: 10%;
 		color: white;
@@ -236,13 +298,18 @@
 		font-size: 1rem;
 		cursor: pointer;
 	}
+	.action-button {
+		margin-left: auto;
+		margin-right: auto;
+		margin-top: 1rem;
+		background-color: rgba(0, 0, 0, 0.7);
+		border-radius: 10%;
+		color: white;
+		padding: 1rem 2rem;
+		text-align: center;
+		cursor: pointer;
+	}
 
-	.organizations-button {
-		right: 10rem;
-	}
-	.logout-button {
-		right: 1rem;
-	}
 	.fa-spinner {
 		font-size: 2rem;
 	}
