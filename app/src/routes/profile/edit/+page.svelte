@@ -68,9 +68,13 @@
 		try {
 			const res = await fetch('http://localhost:8888/patient/' + ssn, {
 				method: 'PUT',
+				headers: {
+					'Accept': 'application/json',
+					'Content-Type': 'application/json'
+				},
 				body: JSON.stringify({
-					ssn: ssn,
 					birthdate: birthdate,
+					ssn: ssn,
 					deathdate: patient.deathdate,
 					drivers: patient.drivers,
 					passport: patient.passport,
