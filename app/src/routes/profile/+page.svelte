@@ -197,6 +197,10 @@
 			>
 				See payer coverage</button
 			>
+			<button
+			class="action-button"
+			on:click={deleteProfile}>Delete Account</button
+		>
 		</div>
 		<div class="right-card">
 			<div class="card">
@@ -214,12 +218,10 @@
 				{/each}
 			</div>
 		</div>
-		<button
-			class="route-button delete-button"
-			on:click={deleteProfile}>Delete Account</button
-		>
+
 
 	</div>
+
 {/if}
 
 <style>
