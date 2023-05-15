@@ -6,9 +6,9 @@ const encounterStatsController = require("../../controllers/encounterStats.js");
 const router = Router();
 
 router.get("/allergy-incidence", async (req, res, next) => {
-    const key = req.query.key? JSON.parse(req.query.key) : null;
-    const startKey = req.query.startkey? JSON.parse(req.query.startkey) : null;
-    const endKey = req.query.endkey? JSON.parse(req.query.endkey) : null;
+    const key = req.query.key? JSON.parse(decodeURIComponent(req.query.key)) : null;
+    const startKey = req.query.startkey? JSON.parse(decodeURIComponent(req.query.startkey)) : null;
+    const endKey = req.query.endkey? JSON.parse(decodeURIComponent(req.query.endkey)) : null;
 
     if (key && key.length != 3) {
         res.status(400).send({
@@ -38,14 +38,15 @@ router.get("/allergy-incidence", async (req, res, next) => {
     }
 
 
-    const statsRes = await encounterStatsController.getAllergyIncidenceBetweenKeys(startKey, endKey);
+    const statsRes = await encounterStatsController.getAllergyIncidenceBetweenKeys(
+                    decodeURIComponent(startKey), decodeURIComponent(endKey));
     res.send(statsRes)
 });
 
 router.get("/payer-coverage", async (req, res, next) => {
-    const key = req.query.key? JSON.parse(req.query.key) : null;
-    const startKey = req.query.startkey? JSON.parse(req.query.startkey) : null;
-    const endKey = req.query.endkey? JSON.parse(req.query.endkey) : null;
+    const key = req.query.key? JSON.parse(decodeURIComponent(req.query.key)) : null;
+    const startKey = req.query.startkey? JSON.parse(decodeURIComponent(req.query.startkey)) : null;
+    const endKey = req.query.endkey? JSON.parse(decodeURIComponent(req.query.endkey)) : null;
 
     if (key && key.length != 2) {
         res.status(400).send({
@@ -62,7 +63,7 @@ router.get("/payer-coverage", async (req, res, next) => {
     }
 
     if (key) {
-        const statsRes = await encounterStatsController.getPayerCoverageByKey(key);
+        const statsRes = await encounterStatsController.getPayerCoverageByKey(decodeURIComponent(key));
         res.send(statsRes);
         return
     }
@@ -75,14 +76,15 @@ router.get("/payer-coverage", async (req, res, next) => {
     }
 
 
-    const statsRes = await encounterStatsController.getPayerCoverageBetweenKeys(startKey, endKey);
+    const statsRes = await encounterStatsController.getPayerCoverageBetweenKeys(
+                    decodeURIComponent(startKey), decodeURIComponent(endKey));
     res.send(statsRes)
 });
 
 router.get("/patient-evolution", async (req, res, next) => {
-    const key = req.query.key? JSON.parse(req.query.key) : null;
-    const startKey = req.query.startkey? JSON.parse(req.query.startkey) : null;
-    const endKey = req.query.endkey? JSON.parse(req.query.endkey) : null;
+    const key = req.query.key? JSON.parse(decodeURIComponent(req.query.key)) : null;
+    const startKey = req.query.startkey? JSON.parse(decodeURIComponent(req.query.startkey)) : null;
+    const endKey = req.query.endkey? JSON.parse(decodeURIComponent(req.query.endkey)) : null;
 
     if (key && key.length != 4) {
         res.status(400).send({
@@ -99,7 +101,7 @@ router.get("/patient-evolution", async (req, res, next) => {
     }
 
     if (key) {
-        const statsRes = await encounterStatsController.getPatientEvolutionByKey(key);
+        const statsRes = await encounterStatsController.getPatientEvolutionByKey(decodeURIComponent(key));
         res.send(statsRes);
         return
     }
@@ -112,7 +114,8 @@ router.get("/patient-evolution", async (req, res, next) => {
     }
 
 
-    const statsRes = await encounterStatsController.getPatientEvolutionBetweenKeys(startKey, endKey);
+    const statsRes = await encounterStatsController.getPatientEvolutionBetweenKeys(
+        decodeURIComponent(startKey), decodeURIComponent(endKey));
     res.send(statsRes)
 });
 
