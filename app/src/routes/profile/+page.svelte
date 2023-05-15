@@ -52,6 +52,13 @@
 {:else if Object.keys(provider).length > 0}
 	<h1>My Provider Profile</h1>
 	<button
+		class="route-button organizations-button"
+		on:click={() => {
+			goto('/organizations');
+		}}>See Organizations</button
+	>
+	<button
+		class="route-button logout-button"
 		on:click={() => {
 			localStorage.removeItem('ssn');
 			localStorage.removeItem('pid');
@@ -204,10 +211,9 @@
 		text-decoration: none;
 		cursor: pointer;
 	}
-	button {
+	.route-button {
 		position: absolute;
 		top: 20px;
-		right: 20px;
 		background-color: rgba(0, 0, 0, 0.7);
 		border-radius: 10%;
 		color: white;
@@ -215,6 +221,13 @@
 		text-align: center;
 		font-size: 1rem;
 		cursor: pointer;
+	}
+
+	.organizations-button {
+		right: 10rem;
+	}
+	.logout-button {
+		right: 1rem;
 	}
 	.fa-spinner {
 		font-size: 2rem;

@@ -4,6 +4,8 @@
 	let ssn = '';
 	let pid = '';
 	let serverLoaded = false;
+	let showMoreText = {};
+
 	/**
 	 * @type {string | any[]}
 	 */
@@ -29,6 +31,9 @@
 			encounters = encountersData.reverse();
 		}
 		serverLoaded = true;
+		for (const encounter of encounters) {
+			showMoreText[encounter.id] = 'Show More';
+		}
 	});
 
 	// Use a reactive statement to automatically update the `isLoading` variable
@@ -89,8 +94,10 @@
 		const moreInfoElement = document.getElementById(id);
 		if (moreInfoElement.hidden) {
 			moreInfoElement.hidden = false;
+			showMoreText[id] = 'Show Less';
 		} else {
 			moreInfoElement.hidden = true;
+			showMoreText[id] = 'Show More';
 		}
 	}
 </script>
@@ -161,7 +168,9 @@
 						<p><strong>Organization:</strong> {encounter.organization.name}</p>
 						<p><strong>Address:</strong> {encounter.organization.address}</p>
 						<p><strong>Class:</strong> {encounter.encounter_class}</p>
-						<button on:click={() => toggleMoreInfo(encounter.id)}>Show More</button>
+						<button on:click={() => toggleMoreInfo(encounter.id)}
+							>{showMoreText[encounter.id]}
+						</button>
 						<div id={encounter.id} class="more-info" hidden>
 							<p><strong>Payer:</strong> {encounter.payer.name}</p>
 							{#if encounter.medications.length > 0}
