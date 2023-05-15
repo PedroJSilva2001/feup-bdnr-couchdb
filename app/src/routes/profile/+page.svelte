@@ -42,6 +42,15 @@
 		}
 	});
 
+	async function deleteProfile() {
+		try {
+			const res = await fetch('http://localhost:8888/patient/' + ssn, {method: 'DELETE'});
+			goto('/');
+		} catch (err) {
+			console.log('erro', err);
+		}
+	}
+
 	// Use a reactive statement to automatically update the `isLoading` variable
 	let isLoading = true;
 	$: isLoading = Object.keys(provider).length === 0 && Object.keys(patient).length === 0;
@@ -152,6 +161,11 @@
 				{/each}
 			</div>
 		</div>
+		<button
+			class="route-button delete-button"
+			on:click={deleteProfile}>Delete Account</button
+		>
+
 	</div>
 {/if}
 
