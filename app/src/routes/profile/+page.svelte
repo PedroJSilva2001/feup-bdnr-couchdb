@@ -163,9 +163,30 @@
 					{patient.zip}
 				</p>
 			</div>
-			<button>See allergy incidence</button>
-			<button>See patient evolution</button>
-			<button>See payer coverage</button>
+			<button
+				class="action-button"
+				on:click={() => {
+					goto('/stats/allergies');
+				}}
+			>
+				See allergy incidence</button
+			>
+			<button
+				class="action-button"
+				on:click={() => {
+					goto('/stats/evolution');
+				}}
+			>
+				See patient evolution</button
+			>
+			<button
+				class="action-button"
+				on:click={() => {
+					goto('/search');
+				}}
+			>
+				See payer coverage</button
+			>
 		</div>
 		<div class="right-card">
 			<div class="card">
