@@ -32,17 +32,12 @@
 			const res = await fetch('http://localhost:8888/provider/' + pid);
 			const { provider: providerData } = await res.json();
 			provider = providerData;
-			console.log('pid', pid);
-			console.log('url', 'http://localhost:8888/provider/' + pid + '/encounters');
-
 			const res2 = await fetch('http://localhost:8888/provider/' + pid + '/encounters');
 			const encountersData = await res2.json();
-			console.log('encountersData', encountersData);
 			encounters = encountersData.slice(-5).reverse();
 		}
 	});
 
-	// Use a reactive statement to automatically update the `isLoading` variable
 	let isLoading = true;
 	$: isLoading = Object.keys(provider).length === 0 && Object.keys(patient).length === 0;
 </script>
@@ -50,21 +45,31 @@
 {#if isLoading}
 	<h3 class="loading"><i class="fa fa-spinner fa-spin" /> Loading...</h3>
 {:else if Object.keys(provider).length > 0}
-	<h1>My Provider Profile</h1>
-	<button
-		class="route-button organizations-button"
-		on:click={() => {
-			goto('/organizations');
-		}}>See Organizations</button
-	>
-	<button
-		class="route-button logout-button"
-		on:click={() => {
-			localStorage.removeItem('ssn');
-			localStorage.removeItem('pid');
-			goto('/');
-		}}>Logout</button
-	>
+	<nav>
+		<h1>My Provider Profile</h1>
+		<div>
+			<button
+				class="route-button"
+				on:click={() => {
+					goto('/search');
+				}}>Search Patients</button
+			>
+			<button
+				class="route-button"
+				on:click={() => {
+					goto('/organizations');
+				}}>See Organizations</button
+			>
+			<button
+				class="route-button"
+				on:click={() => {
+					localStorage.removeItem('ssn');
+					localStorage.removeItem('pid');
+					goto('/');
+				}}>Logout</button
+			>
+		</div>
+	</nav>
 
 	<div class="cards-container">
 		<div class="left-cards">
@@ -106,14 +111,25 @@
 		</div>
 	</div>
 {:else if Object.keys(patient).length > 0}
-	<h1>My Patient Profile</h1>
-	<button
-		on:click={() => {
-			localStorage.removeItem('ssn');
-			localStorage.removeItem('pid');
-			goto('/');
-		}}>Logout</button
-	>
+	<nav>
+		<h1>My Patient Profile</h1>
+		<div>
+			<button
+				class="route-button"
+				on:click={() => {
+					goto('/organizations');
+				}}>See Organizations</button
+			>
+			<button
+				class="route-button"
+				on:click={() => {
+					localStorage.removeItem('ssn');
+					localStorage.removeItem('pid');
+					goto('/');
+				}}>Logout</button
+			>
+		</div>
+	</nav>
 
 	<div class="cards-container">
 		<div class="left-cards">
@@ -156,6 +172,11 @@
 {/if}
 
 <style>
+	nav {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
 	.card-header {
 		display: flex;
 		justify-content: space-between;
@@ -211,9 +232,10 @@
 		text-decoration: none;
 		cursor: pointer;
 	}
+
 	.route-button {
-		position: absolute;
-		top: 20px;
+		display: inline-block;
+		margin-right: 1rem;
 		background-color: rgba(0, 0, 0, 0.7);
 		border-radius: 10%;
 		color: white;
@@ -223,12 +245,6 @@
 		cursor: pointer;
 	}
 
-	.organizations-button {
-		right: 10rem;
-	}
-	.logout-button {
-		right: 1rem;
-	}
 	.fa-spinner {
 		font-size: 2rem;
 	}
