@@ -90,6 +90,18 @@
 					{provider.organization.zip}
 				</p>
 			</div>
+			<button
+				class="action-button"
+				on:click={() => {
+					goto('/stats/allergies');
+				}}>See allergy incidence</button
+			>
+			<button
+				class="action-button"
+				on:click={() => {
+					goto('/stats/allergies');
+				}}>See payer coverage</button
+			>
 		</div>
 		<div class="right-card">
 			<div class="card">
@@ -151,6 +163,9 @@
 					{patient.zip}
 				</p>
 			</div>
+			<button>See allergy incidence</button>
+			<button>See patient evolution</button>
+			<button>See payer coverage</button>
 		</div>
 		<div class="right-card">
 			<div class="card">
@@ -189,6 +204,9 @@
 	.left-cards {
 		flex: 1;
 		margin-right: 1.5rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	}
 
 	.right-card {
@@ -242,6 +260,17 @@
 		padding: 1rem 2rem;
 		text-align: center;
 		font-size: 1rem;
+		cursor: pointer;
+	}
+	.action-button {
+		margin-left: auto;
+		margin-right: auto;
+		margin-top: 1rem;
+		background-color: rgba(0, 0, 0, 0.7);
+		border-radius: 10%;
+		color: white;
+		padding: 1rem 2rem;
+		text-align: center;
 		cursor: pointer;
 	}
 
