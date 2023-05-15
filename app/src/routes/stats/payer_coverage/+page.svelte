@@ -1,42 +1,23 @@
 <script>
 	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
-	let ssn;
-	let condition = '';
-	let startdate = '';
-	let enddate = '';
-	let evolution = [];
+	let reasonCode = '';
+	let payerId = '';
+	let coverage = [];
 	let serverLoaded = false;
 	let search = false;
 
-	onMount(async () => {
-		ssn = localStorage.getItem('ssn');
-	});
-
-	async function handlePatientEvolutionSearch() {
+	async function handlePayerCoverageSearch() {
 		search = true;
-		if (condition) {
-			let url = `http://localhost:8888/encounter-stats/patient-evolution?startkey=["${ssn}",${condition}`;
-			if (startdate) {
-				url += `, "${startdate}"`;
-				if (enddate) {
-					url += `, "${enddate}"`;
-				}
-			}
-			url += `]&endkey=["${ssn}",${condition}`;
-			if (startdate) {
-				url += `, "${startdate}"`;
-				if (enddate) {
-					url += `, "${enddate}"`;
-				}
-			}
+		if (reasonCode && payerId) {
+			let url = `http://localhost:8888/encounter-stats/payer-coverage?startkey=[${reasonCode}, "${payerId}"`;
+			url += ']&endkey=[' + reasonCode + `, "${payerId}"`;
 			url += ']';
 			const response = await fetch(url);
 			const data = await response.json();
-			evolution = data.results;
+			coverage = data.results;
 			serverLoaded = true;
 		} else {
-			alert('Please enter a condition.');
+			alert('Please enter a reason code and payer ID.');
 		}
 	}
 </script>
@@ -61,16 +42,14 @@
 </button>
 
 <div class="container">
-	<h1>Search Patient Evolution</h1>
+	<h1>Search Payer Coverage</h1>
 	<div class="search-forms">
 		<div class="search-form">
-			<label for="condition">Condition:</label>
-			<input id="condition" type="text" bind:value={condition} placeholder="Condition" />
-			<label for="startdate">Start Date:</label>
-			<input id="startdate" type="date" bind:value={startdate} />
-			<label for="enddate">End Date:</label>
-			<input id="enddate" type="date" bind:value={enddate} />
-			<button on:click={handlePatientEvolutionSearch}>Search</button>
+			<label for="reason-code">Reason Code:</label>
+			<input id="reason-code" type="text" bind:value={reasonCode} placeholder="Reason Code" />
+			<label for="payer-id">Payer ID:</label>
+			<input id="payer-id" type="text" bind:value={payerId} placeholder="Payer ID" />
+			<button on:click={handlePayerCoverageSearch}>Search</button>
 		</div>
 	</div>
 	<div class="search-results">
@@ -79,18 +58,10 @@
 			<div class="loading">
 				<h3><i class="fa fa-spinner fa-spin" /> Loading</h3>
 			</div>
-		{:else if Object.keys(evolution).length > 0 && serverLoaded}
-			{#each evolution as result}
+		{:else if Object.keys(coverage).length > 0 && serverLoaded}
+			{#each coverage as result}
 				<div class="card">
-					<p><strong>Condition:</strong> {result.value.description}</p>
-					<p><strong>Number of times w/ condition:</strong> {result.value.count}</p>
-					<p><strong>Start Date:</strong> {result.value.earliest}</p>
-					<p><strong>End Date:</strong> {result.value.latest}</p>
-					<p><strong>Total days w/ condition:</strong> {result.value.incidenceDuration}</p>
-					<p>
-						<strong>Max nº of consecutive days w/ condition:</strong>
-						{result.value.maxIncidenceDuration}
-					</p>
+					<p><strong>Total Amount:</strong> {result.value}</p>
 				</div>
 			{/each}
 		{:else}

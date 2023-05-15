@@ -99,7 +99,7 @@
 			<button
 				class="action-button"
 				on:click={() => {
-					goto('/stats/allergies');
+					goto('/stats/payer_coverage');
 				}}>See payer coverage</button
 			>
 		</div>
@@ -182,7 +182,7 @@
 			<button
 				class="action-button"
 				on:click={() => {
-					goto('/search');
+					goto('/stats/payer_coverage');
 				}}
 			>
 				See payer coverage</button
