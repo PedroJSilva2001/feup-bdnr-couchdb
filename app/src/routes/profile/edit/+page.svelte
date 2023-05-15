@@ -63,7 +63,6 @@
 	let isLoading = true;
 	$: isLoading = Object.keys(provider).length === 0 && Object.keys(patient).length === 0;
 
-	console.log('ola', ssn);
 	async function updateProfile() {
 		try {
 			const res = await fetch('http://localhost:8888/patient/' + ssn, {

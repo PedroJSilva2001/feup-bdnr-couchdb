@@ -7,12 +7,16 @@
 		><i class="fas fa-user-injured" />
 		<h2>Login as Patient</h2></a
 	>
+	<a href="profile/add" class="square"
+		><i class="fas fa-user-plus" />
+		<h2>Register</h2></a
+	>
 </div>
 
 <style>
 	.container {
 		text-align: center;
-		margin: auto;
+		justify-content: space-around;
 	}
 	.square {
 		border: solid #ccc;
